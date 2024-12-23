@@ -15,6 +15,6 @@ spring:
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:7432/stats-db
-    username: user92
-    password: user92
+    url: jdbc:postgresql://localhost:5432/ewm-stats
+    username: root
+    password: root
