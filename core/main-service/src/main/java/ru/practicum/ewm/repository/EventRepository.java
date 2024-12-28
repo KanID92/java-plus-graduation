@@ -35,10 +35,11 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     @Query(value = "SELECT COUNT(*) FROM LIKES_EVENTS WHERE EVENT_ID = :eventId", nativeQuery = true)
     long countLikesByEventId(Long eventId);
 
-    @Query(value = "SELECT E.*, RATE.LIKES FROM EVENTS E LEFT JOIN (\n" +
-                        "SELECT EVENT_ID, COUNT(*) AS LIKES FROM LIKES_EVENTS\n" +
-                        "GROUP BY EVENT_ID) AS RATE ON E.EVENT_ID = RATE.EVENT_ID\n" +
-                   "ORDER BY RATE.LIKES DESC NULLS LAST\n" +
-                   "LIMIT :count", nativeQuery = true)
+    @Query(value = """ 
+                    SELECT E.*, RATE.LIKES FROM EVENTS E LEFT JOIN (
+                    SELECT EVENT_ID, COUNT(*) AS LIKES FROM LIKES_EVENTS
+                    GROUP BY EVENT_ID) AS RATE ON E.EVENT_ID = RATE.EVENT_ID
+                    ORDER BY RATE.LIKES DESC NULLS LAST
+                    LIMIT :count""", nativeQuery = true)
     List<Event> findTop(Integer count);
 }

@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class NewCompilationDto {
     List<Long> events;
-    boolean pinned = false;
+    boolean pinned;
     @NotBlank
     @Size(min = 1, max = 50, message = "Имя не более 50 символов")
     @NotNull

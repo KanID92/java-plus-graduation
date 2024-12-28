@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.HitDto;
 import ru.practicum.HitStatDto;
 import ru.practicum.client.StatClient;
+import ru.practicum.ewm.config.Constants;
 import ru.practicum.ewm.controller.params.EventGetByIdParams;
 import ru.practicum.ewm.controller.params.EventUpdateParams;
 import ru.practicum.ewm.controller.params.search.EventSearchParams;
@@ -46,7 +47,7 @@ public class EventServiceImpl implements EventService {
 
     private final StatClient statClient;
 
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(Constants.JSON_TIME_FORMAT);
 
     @Override
     public EventFullDto create(long userId, NewEventDto newEventDto) {
@@ -123,7 +124,7 @@ public class EventServiceImpl implements EventService {
             rangeStart = LocalDateTime.parse(LocalDateTime.now().format(dateTimeFormatter), dateTimeFormatter);
         }
 
-        if (rangeEnd == null && rangeStart == null) {
+        if (rangeEnd == null) {
             booleanExpression = booleanExpression.and(
                     event.eventDate.after(LocalDateTime.now())
             );
@@ -131,7 +132,7 @@ public class EventServiceImpl implements EventService {
             rangeEnd = rangeStart.plusYears(100);
         }
 
-        List<Event> eventListBySearch = eventListBySearch =
+        List<Event> eventListBySearch =
                 eventRepository.findAll(booleanExpression, page).stream().toList();
 
         statClient.saveHit(hitDto);

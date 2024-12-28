@@ -18,11 +18,12 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             "SELECT * FROM LIKES_LOCATIONS WHERE LOCATION_ID = :locationId AND USER_ID = :userId)", nativeQuery = true)
     boolean checkLikeExisting(Long userId, Long locationId);
 
-    @Query(value = "SELECT L.*, RATE.LIKES FROM LOCATIONS L LEFT JOIN (\n" +
-            "SELECT LOCATION_ID, COUNT(*) AS LIKES FROM LIKES_LOCATIONS\n" +
-            "GROUP BY LOCATION_ID) AS RATE ON L.LOCATION_ID = RATE.LOCATION_ID\n" +
-            "ORDER BY RATE.LIKES DESC NULLS LAST\n" +
-            "LIMIT :count", nativeQuery = true)
+    @Query(value = """
+            SELECT L.*, RATE.LIKES FROM LOCATIONS L LEFT JOIN ( 
+            SELECT LOCATION_ID, COUNT(*) AS LIKES FROM LIKES_LOCATIONS
+            GROUP BY LOCATION_ID) AS RATE ON L.LOCATION_ID = RATE.LOCATION_ID
+            ORDER BY RATE.LIKES DESC NULLS LAST
+            LIMIT :count""", nativeQuery = true)
     List<Location> findTop(Integer count);
 
     @Query(value = "SELECT COUNT(*) FROM LIKES_LOCATIONS WHERE LOCATION_ID = :locationId", nativeQuery = true)

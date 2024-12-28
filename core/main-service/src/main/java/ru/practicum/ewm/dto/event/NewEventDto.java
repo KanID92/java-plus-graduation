@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import ru.practicum.ewm.config.Constants;
 import ru.practicum.ewm.dto.event.annotation.FutureAfterTwoHours;
 import ru.practicum.ewm.entity.Location;
 
@@ -21,7 +22,7 @@ public record NewEventDto(
         @NotBlank @Size(min = 20, max = 7000)
         String description,
 
-        @NotNull @FutureAfterTwoHours @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+        @NotNull @FutureAfterTwoHours @JsonFormat(pattern = Constants.JSON_TIME_FORMAT)
         LocalDateTime eventDate,
 
         @NotNull

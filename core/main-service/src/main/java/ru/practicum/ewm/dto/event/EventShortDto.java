@@ -1,6 +1,7 @@
 package ru.practicum.ewm.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import ru.practicum.ewm.config.Constants;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.entity.Location;
@@ -15,12 +16,12 @@ public record EventShortDto(
 
         Long confirmedRequests,
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
+        @JsonFormat(pattern = Constants.JSON_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
         LocalDateTime createOn,
 
         String description,
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
+        @JsonFormat(pattern = Constants.JSON_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
         LocalDateTime eventDate,
 
         Long id,

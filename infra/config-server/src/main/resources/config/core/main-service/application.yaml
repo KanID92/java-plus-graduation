@@ -19,7 +19,6 @@ spring:
     password: root
 
 server:
-  port: 8081
+  port: 0
 
-#stats-service:
-#  url: http://localhost:9090
+

@@ -3,6 +3,7 @@ package ru.practicum.ewm.dto.event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import ru.practicum.ewm.config.Constants;
 import ru.practicum.ewm.dto.event.annotation.FutureAfterTwoHours;
 import ru.practicum.ewm.entity.Location;
 import ru.practicum.ewm.entity.StateAction;
@@ -19,7 +20,7 @@ public record UpdateEventAdminRequest(
         @Size(min = 20, max = 7000)
         String description,
 
-        @FutureAfterTwoHours @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+        @FutureAfterTwoHours @JsonFormat(pattern = Constants.JSON_TIME_FORMAT)
         LocalDateTime eventDate,
 
         Location location,
