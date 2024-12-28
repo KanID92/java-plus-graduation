@@ -1,5 +1,4 @@
 services:
-
   discovery-server:
     build: infra/discovery-server
     container_name: discovery-server
@@ -27,7 +26,7 @@ services:
     healthcheck:
       test: "curl --fail --silent config-server:9091/actuator/health | grep UP || exit 1"
       timeout: 5s
-      interval: 20s
+      interval: 30s
       retries: 5
 
   gateway-server:
@@ -46,8 +45,6 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
 
   stats-server:
-    build: stats/stats-server
-    container_name: ewm-stats-server
     ports:
       - "9090:9090"
     depends_on:
@@ -68,44 +65,13 @@ services:
       interval: 15s
       retries: 10
 
+
   stats-db:
     image: postgres:16.1
-    container_name: postgres-ewm-stats-db
-    environment:
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_USER=root
-      - POSTGRES_DB=ewm-stats
-    networks:
-      - ewm-net
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 10s
-      retries: 15
 
   ewm-service:
-    build: core/main-service
-    container_name: ewm-main-service
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      stats-server:
-        condition: service_healthy
-    networks:
-      - ewm-net
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SERVER_PORT=8081
-    healthcheck:
-      test: "curl --fail --silent localhost:8081/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 25s
-      retries: 10
+    ports:
+      - "8080:8080"
 
   ewm-db:
     image: postgres:16.1
@@ -124,54 +90,6 @@ services:
 
 networks:
   ewm-net:
-
-
-#  stats-server:
-#    build: stats/stats-server
-#    container_name: stats-server
-#    ports:
-#      - "9090:9090"
-#    depends_on:
-#      - stats-db
-#    environment:
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats-db
-#      - SPRING_DATASOURCE_USERNAME=user92
-#      - SPRING_DATASOURCE_PASSWORD=user92
-#
-#
-#  stats-db:
-#    image: postgres:16.1
-#    container_name: postgres-ewm-stats-db
-#    ports:
-#      - "7432:5432"
-#    environment:
-#      - POSTGRES_DB=stats-db
-#      - POSTGRES_USER=user92
-#      - POSTGRES_PASSWORD=user92
-#
-#  ewm-service:
-#    build: ewm-service
-#    container_name: ewm-service
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - ewm-db
-#      - stats-server
-#    environment:
-#      - STATS-SERVICE_URL=http://stats-server:9090
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-db
-#      - SPRING_DATASOURCE_USERNAME=main
-#      - SPRING_DATASOURCE_PASSWORD=main
-#
-#  ewm-db:
-#    image: postgres:16.1
-#    container_name: ewm-db
-#    ports:
-#      - "8432:5432"
-#    environment:
-#      - POSTGRES_DB=ewm-db
-#      - POSTGRES_USER=main
-#      - POSTGRES_PASSWORD=main
 
 
 
