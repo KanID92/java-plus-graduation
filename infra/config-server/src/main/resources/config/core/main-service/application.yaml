@@ -6,20 +6,20 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        show_sql: true
+        format_sql: false
+        show_sql: false
   sql:
     init:
       mode: always
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:8432/ewm-db
-    username: main
-    password: main
+    url: jdbc:postgresql://ewm-db:5432/ewm-main
+    username: root
+    password: root
 
 server:
-  port: 0
+  port: 8081
 
-stats-service:
-  url: http://localhost:9090
+#stats-service:
+#  url: http://localhost:9090

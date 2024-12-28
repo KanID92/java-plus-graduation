@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:7432/stats-db
-    username: user92
-    password: user92
+    url: jdbc:postgresql://stats-db:5432/ewm-stats
+    username: root
+    password: root
   jpa:
     hibernate:
       ddl-auto: none
@@ -16,7 +16,6 @@ spring:
   sql:
     init:
       mode: always
-
 
 server:
   port: 9090
