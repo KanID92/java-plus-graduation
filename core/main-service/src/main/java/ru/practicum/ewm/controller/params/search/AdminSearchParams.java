@@ -2,7 +2,7 @@ package ru.practicum.ewm.controller.params.search;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import ru.practicum.ewm.entity.EventState;
+import ru.practicum.core.api.enums.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -15,6 +15,8 @@
         <module>location-service</module>
         <module>interaction-api</module>
         <module>user-service</module>
+        <module>like-service</module>
+        <module>request-service</module>
     </modules>
 
     <packaging>pom</packaging>

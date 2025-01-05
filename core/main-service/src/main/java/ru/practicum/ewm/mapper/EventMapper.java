@@ -2,25 +2,39 @@ package ru.practicum.ewm.mapper;
 
 import jakarta.validation.ValidationException;
 import org.mapstruct.*;
-import ru.practicum.ewm.dto.event.*;
-import ru.practicum.ewm.entity.*;
+import ru.practicum.core.api.dto.event.*;
+import ru.practicum.core.api.dto.user.UserDto;
+import ru.practicum.core.api.dto.user.UserShortDto;
+import ru.practicum.core.api.enums.EventState;
+import ru.practicum.ewm.entity.Category;
+import ru.practicum.ewm.entity.Event;
 
 import java.time.LocalDateTime;
 
 @Mapper(componentModel = "spring")
 public abstract class EventMapper {
 
-    @Mapping(target = "initiator", source = "initiator")
+    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", source = "initiatorId")
+    @Mapping(target = "locationId", source = "locationId")
     @Mapping(target = "category", source = "category")
-    @Mapping(target = "location", source = "location")
+    @Mapping(target = "location", ignore = true)
     @Mapping(target = "createOn", expression = "java(getCurrentLocalDatetime())")
     @Mapping(target = "state", expression = "java(getPendingEventState())")
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "confirmedRequests", ignore = true)
+    @Mapping(target = "publishedOn", ignore = true)
+    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "likes", ignore = true)
     public abstract Event newEventDtoToEvent(
-            NewEventDto newEventDto, User initiator, Category category, Location location, LocalDateTime createOn);
+            NewEventDto newEventDto, Long initiatorId, Category category, Long locationId, LocalDateTime createOn);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
             nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "confirmedRequests", ignore = true)
+    @Mapping(target = "createOn", ignore = true)
+    @Mapping(target = "locationId", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "location", ignore = true)
@@ -36,8 +50,14 @@ public abstract class EventMapper {
     public abstract void updateEventAdminRequestToEvent(
             @MappingTarget Event event, UpdateEventAdminRequest updateEventAdminRequest);
 
+    @Mapping(target = "id", expression = "java(event.getId())")
+    @Mapping(target = "initiator", expression = "java(createUserShortDto(event.getInitiator()))")
+    @Mapping(target = "createdOn", source = "event.createOn")
+    @Mapping(target = "likesCount", source = "event.likes")
     public abstract EventFullDto eventToEventFullDto(Event event);
 
+    @Mapping(target = "id", expression = "java(event.getId())")
+    @Mapping(target = "initiator", expression = "java(createUserShortDto(event.getInitiator()))")
     @Mapping(source = "likes", target = "likesCount")
     public abstract EventShortDto eventToEventShortDto(Event event);
 
@@ -45,6 +65,16 @@ public abstract class EventMapper {
     LocalDateTime getCurrentLocalDatetime() {
         return LocalDateTime.now();
     }
+
+    @Named("createShortDto")
+    UserShortDto createUserShortDto(UserDto user) {
+        if (user != null) {
+            return new UserShortDto(user.id(), user.name());
+        } else
+            return null;
+    }
+
+
 
     @Named("getPendingEventState")
     EventState getPendingEventState() {

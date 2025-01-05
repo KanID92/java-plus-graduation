@@ -5,19 +5,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.core.api.dto.event.EventFullDto;
+import ru.practicum.core.api.dto.event.EventShortDto;
+import ru.practicum.core.api.dto.event.NewEventDto;
+import ru.practicum.core.api.dto.event.UpdateEventUserRequest;
 import ru.practicum.ewm.controller.params.EventGetByIdParams;
 import ru.practicum.ewm.controller.params.EventUpdateParams;
 import ru.practicum.ewm.controller.params.search.EventSearchParams;
 import ru.practicum.ewm.controller.params.search.PrivateSearchParams;
-import ru.practicum.ewm.dto.event.EventFullDto;
-import ru.practicum.ewm.dto.event.EventShortDto;
-import ru.practicum.ewm.dto.event.NewEventDto;
-import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
-import ru.practicum.ewm.dto.request.EventRequestStatusUpdateRequest;
-import ru.practicum.ewm.dto.request.EventRequestStatusUpdateResult;
-import ru.practicum.ewm.dto.request.ParticipationRequestDto;
 import ru.practicum.ewm.service.EventService;
-import ru.practicum.ewm.service.RequestService;
 
 import java.util.List;
 
@@ -28,7 +24,6 @@ import java.util.List;
 public class PrivateEventController {
 
     private final EventService eventService;
-    private final RequestService requestService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -83,65 +78,5 @@ public class PrivateEventController {
                 eventId, userId, receivedEventDto);
         return receivedEventDto;
     }
-
-    @GetMapping("/{eventId}/requests")
-    public List<ParticipationRequestDto> getAllRequestsForOwnEvent(
-            @PathVariable long userId,
-            @PathVariable long eventId) {
-        log.info("==> GET. /users/{userId}/events/{eventId}/requests " +
-                "Getting requests for own event with id: {}, of user with id: {}", eventId, userId);
-
-        List<ParticipationRequestDto> receivedRequestsDtoList
-                = requestService.getAllForOwnEvent(userId, eventId);
-
-        log.info("<== GET. /users/{userId}/events/{eventId}/requests " +
-                "Returning requests for own event with id: {} of user with id: {}", eventId, userId);
-
-        return receivedRequestsDtoList;
-    }
-
-    @PatchMapping("/{eventId}/requests")
-    public EventRequestStatusUpdateResult updateRequestStatus(
-            @PathVariable long userId,
-            @PathVariable long eventId,
-            @RequestBody @Valid EventRequestStatusUpdateRequest updateRequestStatusDto) {
-
-        log.info("==> PATCH. /users/{userId}/events/{eventId}/requests " +
-                "Changing request status for own event with id: {} of user with id: {}", eventId, userId);
-        log.info("EventRequestStatusUpdateRequest. Deserialized body: {}", updateRequestStatusDto);
-        EventRequestStatusUpdateResult eventUpdateResult =
-                requestService.updateStatus(new PrivateUpdateRequestParams(userId, eventId, updateRequestStatusDto));
-        log.info("<== PATCH. /users/{userId}/events/{eventId}/requests " +
-                "Changed request status for own event with id: {} of user with id: {}", eventId, userId);
-        return eventUpdateResult;
-    }
-
-    @PutMapping("/{eventId}/likes")
-    public EventShortDto addLike(//Добавление лайка события
-            @PathVariable long userId,
-            @PathVariable long eventId
-    ) {
-        log.info("==> PUT. /users/{userId}/events/{eventId}/likes" +
-                "Adding like for event with id: {} by user with id: {}", eventId, userId);
-        EventShortDto eventShortDto = eventService.addLike(userId, eventId);
-        log.info("<== PUT. /users/{userId}/events/{eventId}/likes" +
-                "Like for event with id: {} by user with id: {} added.", eventId, userId);
-        return eventShortDto;
-    }
-
-    @DeleteMapping("/{eventId}/likes")
-    public void deleteLike(//удаление лайка события
-                                  @PathVariable long userId,
-                                  @PathVariable long eventId
-    ) {
-        log.info("==> DELETE. /users/{userId}/events/{eventId}/likes" +
-                "Deleting like for event with id: {} by user with id: {}", eventId, userId);
-        eventService.deleteLike(userId, eventId);
-        log.info("<== DELETE. /users/{userId}/events/{eventId}/likes" +
-                "Like for event with id: {} by user with id: {} deleted.", eventId, userId);
-    }
-
-
-
 
 }

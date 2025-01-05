@@ -5,13 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.config.Constants;
+import ru.practicum.core.api.constant.Constants;
+import ru.practicum.core.api.dto.event.EventFullDto;
+import ru.practicum.core.api.dto.event.UpdateEventAdminRequest;
+import ru.practicum.core.api.enums.EventState;
 import ru.practicum.ewm.controller.params.EventUpdateParams;
 import ru.practicum.ewm.controller.params.search.AdminSearchParams;
 import ru.practicum.ewm.controller.params.search.EventSearchParams;
-import ru.practicum.ewm.dto.event.EventFullDto;
-import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
-import ru.practicum.ewm.entity.EventState;
 import ru.practicum.ewm.service.EventService;
 
 import java.time.LocalDateTime;

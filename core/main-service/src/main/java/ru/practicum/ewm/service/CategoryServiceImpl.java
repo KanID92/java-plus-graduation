@@ -6,10 +6,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import ru.practicum.ewm.dto.category.CategoryDto;
-import ru.practicum.ewm.dto.category.NewCategoryDto;
+import ru.practicum.core.api.dto.category.CategoryDto;
+import ru.practicum.core.api.dto.category.NewCategoryDto;
+import ru.practicum.core.api.exception.NotFoundException;
 import ru.practicum.ewm.entity.Category;
-import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.mapper.CategoryMapper;
 import ru.practicum.ewm.repository.CategoryRepository;
 

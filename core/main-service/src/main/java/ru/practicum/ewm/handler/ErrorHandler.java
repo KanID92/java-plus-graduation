@@ -9,10 +9,11 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.ewm.exception.AccessException;
-import ru.practicum.ewm.exception.ConflictException;
-import ru.practicum.ewm.exception.IncorrectValueException;
-import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.core.api.exception.AccessException;
+import ru.practicum.core.api.exception.ConflictException;
+import ru.practicum.core.api.exception.IncorrectValueException;
+import ru.practicum.core.api.exception.NotFoundException;
+
 
 @Slf4j
 @RestControllerAdvice

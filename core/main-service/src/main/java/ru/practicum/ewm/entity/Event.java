@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import ru.practicum.core.api.dto.location.LocationDto;
+import ru.practicum.core.api.dto.user.UserDto;
+import ru.practicum.core.api.enums.EventState;
 
 import java.time.LocalDateTime;
 
@@ -38,19 +41,22 @@ public class Event {
     @Column(name = "EVENT_DATE")
     private LocalDateTime eventDate;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "LOCATION_ID")
-    private Location location;
+    @Column(name = "LOCATION_ID")
+    private Long locationId;
+
+    @Transient
+    private LocationDto location;
 
     @Column(name = "PAID")
     private boolean paid;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "INITIATOR_ID")
-    private User initiator;
+    @Column(name = "INITIATOR_ID")
+    private Long initiatorId;
+
+    @Transient
+    private UserDto initiator;
 
     @Column(name = "PARTICIPANT_LIMIT")
-
     private int participantLimit;
 
     @Column(name = "PUBLISHED_ON")

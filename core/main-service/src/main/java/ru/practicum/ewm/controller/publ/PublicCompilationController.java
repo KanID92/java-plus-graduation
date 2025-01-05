@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.compilation.CompilationDto;
+import ru.practicum.core.api.dto.compilation.CompilationDto;
 import ru.practicum.ewm.service.CompilationService;
 
 import java.util.List;

@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.category.CategoryDto;
-import ru.practicum.ewm.dto.category.NewCategoryDto;
+import ru.practicum.core.api.dto.category.CategoryDto;
+import ru.practicum.core.api.dto.category.NewCategoryDto;
 import ru.practicum.ewm.service.CategoryService;
 
 
@@ -23,7 +23,9 @@ public class AdminCategoryController {
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto dto) {
         log.info("==> POST. Adding new Category: {}", dto);
-        return categoryService.createCategory(dto);
+        CategoryDto savedCategory = categoryService.createCategory(dto);
+        log.info("<== POST. New Category added: {}", dto);
+        return savedCategory;
     }
 
     @DeleteMapping("/{catId}")
@@ -31,6 +33,7 @@ public class AdminCategoryController {
     public void deleteCategory(@PathVariable long catId) {
         log.info("==> POST. Deleting Category: {}", catId);
         categoryService.delete(catId);
+        log.info("<== POST. Category deleted");
     }
 
     @PatchMapping("/{catId}")
@@ -38,6 +41,8 @@ public class AdminCategoryController {
     public CategoryDto updateCategory(@PathVariable long catId, @Valid @RequestBody CategoryDto categoryDto) {
         categoryDto.setId(catId);
         log.info("==> POST. Updating Category: {}", categoryDto);
-        return categoryService.updateCategory(categoryDto);
+        CategoryDto updatedCategory = categoryService.updateCategory(categoryDto);
+        log.info("<== POST. Category updated: {}", categoryDto);
+        return updatedCategory;
     }
 }

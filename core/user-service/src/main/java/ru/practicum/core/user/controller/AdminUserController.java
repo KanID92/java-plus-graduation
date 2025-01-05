@@ -51,11 +51,5 @@ public class AdminUserController {
         return receivedUserDtoList;
     }
 
-    @GetMapping("/{userId}/check")
-    public void checkExistence(@PathVariable("userId") long userId) {
-        log.info("==> GET. Checking exist for User: {}", userId);
-        userService.checkExistence(userId);
-        log.info("|==| GET. User exist: {}", true);
-    }
 }
 

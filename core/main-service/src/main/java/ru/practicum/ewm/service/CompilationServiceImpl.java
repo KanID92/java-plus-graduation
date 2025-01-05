@@ -5,13 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.dto.compilation.CompilationDto;
-import ru.practicum.ewm.dto.compilation.NewCompilationDto;
-import ru.practicum.ewm.dto.compilation.UpdateCompilationRequestDto;
-import ru.practicum.ewm.dto.event.EventShortDto;
+import ru.practicum.core.api.dto.compilation.CompilationDto;
+import ru.practicum.core.api.dto.compilation.NewCompilationDto;
+import ru.practicum.core.api.dto.compilation.UpdateCompilationRequestDto;
+import ru.practicum.core.api.dto.event.EventShortDto;
+import ru.practicum.core.api.exception.NotFoundException;
 import ru.practicum.ewm.entity.Compilation;
 import ru.practicum.ewm.entity.Event;
-import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.mapper.CompilationMapper;
 import ru.practicum.ewm.mapper.EventMapper;
 import ru.practicum.ewm.repository.CompilationRepository;
@@ -35,7 +35,11 @@ public class CompilationServiceImpl implements CompilationService {
         Pageable pageable = PageRequest.of(from > 0 ? from / size : 0, size);
         Page<Compilation> compilationsPage = compilationRepository.findAllByPinned(pinned, pageable);
         return compilationsPage.getContent().stream()
-                .map(it -> compilationMapper.toCompilationDto(it, it.getEvents().stream().map(eventMapper::eventToEventShortDto).toList()))
+                .map(
+                        it -> compilationMapper.toCompilationDto(
+                        it, it.getEvents().stream()
+                                .map(eventMapper::eventToEventShortDto)
+                                .toList()))
                 .collect(Collectors.toList());
     }
 

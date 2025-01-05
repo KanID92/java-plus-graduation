@@ -5,6 +5,7 @@ import ru.practicum.core.api.dto.user.UserDto;
 import ru.practicum.core.user.controller.AdminUsersGetAllParams;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
 
@@ -15,5 +16,9 @@ public interface UserService {
     void delete(long userId);
 
     void checkExistence(long userId);
+
+    UserDto getById(long userId);
+
+    Map<Long, UserDto> getByIds(List<Long> userIds);
 
 }

@@ -10,21 +10,32 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.HitDto;
 import ru.practicum.HitStatDto;
 import ru.practicum.client.StatClient;
-import ru.practicum.ewm.config.Constants;
+import ru.practicum.core.api.client.LikeServiceClient;
+import ru.practicum.core.api.client.LocationServiceClient;
+import ru.practicum.core.api.client.RequestServiceClient;
+import ru.practicum.core.api.client.UserServiceClient;
+import ru.practicum.core.api.constant.Constants;
+import ru.practicum.core.api.dto.event.EventFullDto;
+import ru.practicum.core.api.dto.event.EventShortDto;
+import ru.practicum.core.api.dto.event.NewEventDto;
+import ru.practicum.core.api.dto.location.LocationDto;
+import ru.practicum.core.api.dto.user.UserDto;
+import ru.practicum.core.api.enums.EventState;
+import ru.practicum.core.api.enums.RequestStatus;
+import ru.practicum.core.api.enums.StateAction;
+import ru.practicum.core.api.exception.AccessException;
+import ru.practicum.core.api.exception.ConflictException;
+import ru.practicum.core.api.exception.IncorrectValueException;
+import ru.practicum.core.api.exception.NotFoundException;
 import ru.practicum.ewm.controller.params.EventGetByIdParams;
 import ru.practicum.ewm.controller.params.EventUpdateParams;
 import ru.practicum.ewm.controller.params.search.EventSearchParams;
 import ru.practicum.ewm.controller.params.search.PublicSearchParams;
-import ru.practicum.ewm.dto.event.EventFullDto;
-import ru.practicum.ewm.dto.event.EventShortDto;
-import ru.practicum.ewm.dto.event.NewEventDto;
-import ru.practicum.ewm.entity.*;
-import ru.practicum.ewm.exception.AccessException;
-import ru.practicum.ewm.exception.ConflictException;
-import ru.practicum.ewm.exception.IncorrectValueException;
-import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.entity.Category;
+import ru.practicum.ewm.entity.Event;
 import ru.practicum.ewm.mapper.EventMapper;
-import ru.practicum.ewm.repository.*;
+import ru.practicum.ewm.repository.CategoryRepository;
+import ru.practicum.ewm.repository.EventRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,11 +50,12 @@ import static ru.practicum.ewm.entity.QEvent.event;
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserServiceClient userServiceClient;
     private final EventMapper eventMapper;
-    private final LocationRepository locationRepository;
+    private final LocationServiceClient locationServiceClient;
+    private final LikeServiceClient likeServiceClient;
     private final CategoryRepository categoryRepository;
-    private final RequestRepository requestRepository;
+    private final RequestServiceClient requestServiceClient;
 
     private final StatClient statClient;
 
@@ -51,13 +63,15 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto create(long userId, NewEventDto newEventDto) {
-        User initiator = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
+        UserDto savedUser = userServiceClient.getById(userId);
         Category category = categoryRepository.findById(newEventDto.category())
                 .orElseThrow(() -> new NotFoundException("Category with id " + newEventDto.category() + " not found"));
-        Location location = locationRepository.save(newEventDto.location());
-        Event event = eventMapper.newEventDtoToEvent(newEventDto, initiator, category, location, LocalDateTime.now());
+        LocationDto locationDto = locationServiceClient.create(userId, newEventDto.location());
+        Event event = eventMapper.newEventDtoToEvent(
+                newEventDto, savedUser.id(), category, locationDto.id(), LocalDateTime.now());
         Event savedEvent = eventRepository.save(event);
+        savedEvent.setInitiator(savedUser);
+        savedEvent.setLocation(locationDto);
         return eventMapper.eventToEventFullDto(savedEvent);
     }
 
@@ -66,13 +80,23 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getAllByInitiator(EventSearchParams searchParams) {
 
         long initiatorId = searchParams.getPrivateSearchParams().getInitiatorId();
-        User user = userRepository.findById(initiatorId)
-                .orElseThrow(() -> new NotFoundException("User with id " + initiatorId + " not found"));
+
+        UserDto userDto = userServiceClient.getById(initiatorId);
         Pageable page = PageRequest.of(searchParams.getFrom(), searchParams.getSize());
         List<Event> receivedEvents = eventRepository.findAllByInitiatorId(initiatorId, page);
+
+        List<Long> eventIds = receivedEvents.stream().map(Event::getId).toList();
+        Map<Long, Long> likesEventMap = likeServiceClient.getAllEventsLikesByIds(eventIds);
+
+        List<Long> locationIds = receivedEvents.stream().map(Event::getLocationId).toList();
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+
         for (Event event : receivedEvents) {
-            event.setLikes(eventRepository.countLikesByEventId(event.getId()));
+            event.setLikes(likesEventMap.get(event.getId()));
+            event.setLocation(locationDtoMap.get(event.getLocationId()));
+            event.setInitiator(userDto);
         }
+
         return receivedEvents.stream()
                 .map(eventMapper::eventToEventShortDto)
                 .toList();
@@ -137,6 +161,18 @@ public class EventServiceImpl implements EventService {
 
         statClient.saveHit(hitDto);
 
+        List<Long> eventIds = eventListBySearch.stream().map(Event::getId).toList();
+        Map<Long, Long> likesEventMap = likeServiceClient.getAllEventsLikesByIds(eventIds);
+
+        Map<Long, UserDto> users = userServiceClient.getAll(eventListBySearch.stream()
+                .map(Event::getInitiatorId)
+                .toList());
+
+        List<Long> locationIds = eventListBySearch.stream().map(Event::getLocationId).toList();
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+
+        Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
+                RequestStatus.CONFIRMED, eventIds);
 
         for (Event event : eventListBySearch) {
             List<HitStatDto> hitStatDtoList = statClient.getStats(
@@ -149,9 +185,10 @@ public class EventServiceImpl implements EventService {
                 view += hitStatDto.getHits();
             }
             event.setViews(view);
-            event.setConfirmedRequests(
-                    requestRepository.countByStatusAndEventId(RequestStatus.CONFIRMED, event.getId()));
-            event.setLikes(eventRepository.countLikesByEventId(event.getId()));
+            event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
+            event.setLikes(likesEventMap.get(event.getId()));
+            event.setLocation(locationDtoMap.get(event.getLocationId()));
+            event.setInitiator(users.get(event.getInitiatorId()));
         }
 
         return eventListBySearch.stream()
@@ -166,11 +203,23 @@ public class EventServiceImpl implements EventService {
         String rangeEnd = LocalDateTime.now().format(dateTimeFormatter);
         String rangeStart = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
 
-        List<Event> eventListBySearch = eventRepository.findTop(count);
+        Map<Long, Long> likesEventMap = likeServiceClient.getTopLikedEventsIds(count);
+        List<Long> topEventsIds = new ArrayList<>(likesEventMap.keySet());
+        List<Event> eventTopList = eventRepository.findAllByIdIn(topEventsIds);
+
+        Map<Long, UserDto> users = userServiceClient.getAll(eventTopList.stream()
+                .map(event -> event.getInitiator().id())
+                .toList());
+
+        List<Long> locationIds = eventTopList.stream().map(Event::getLocationId).toList();
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+
+        Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
+                RequestStatus.CONFIRMED, topEventsIds);
 
         statClient.saveHit(hitDto);
 
-        for (Event event : eventListBySearch) {
+        for (Event event : eventTopList) {
             List<HitStatDto> hitStatDtoList = statClient.getStats(
                     rangeStart,
                     rangeEnd,
@@ -181,12 +230,13 @@ public class EventServiceImpl implements EventService {
                 view += hitStatDto.getHits();
             }
             event.setViews(view);
-            event.setConfirmedRequests(
-                    requestRepository.countByStatusAndEventId(RequestStatus.CONFIRMED, event.getId()));
-            event.setLikes(eventRepository.countLikesByEventId(event.getId()));
+            event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
+            event.setLikes(likesEventMap.get(event.getId()));
+            event.setLocation(locationDtoMap.get(event.getLocationId()));
+            event.setInitiator(users.get(event.getInitiatorId()));
         }
 
-        return eventListBySearch.stream()
+        return eventTopList.stream()
                 .map(eventMapper::eventToEventShortDto)
                 .toList();
     }
@@ -227,6 +277,14 @@ public class EventServiceImpl implements EventService {
                             }
                         }
                 );
+        Map<Long, UserDto> users = userServiceClient.getAll(result.stream()
+                .map(Event::getInitiatorId)
+                .toList());
+
+        for (Event event : result) {
+            event.setInitiator(users.get(event.getInitiator().id()));
+        }
+
         return result.stream()
                 .map(eventMapper::eventToEventShortDto)
                 .toList();
@@ -242,7 +300,7 @@ public class EventServiceImpl implements EventService {
 
         if (searchParams.getAdminSearchParams().getUsers() != null) {
             booleanExpression = booleanExpression.and(
-                    event.initiator.id.in(searchParams.getAdminSearchParams().getUsers()));
+                    event.initiatorId.in(searchParams.getAdminSearchParams().getUsers()));
         }
 
         if (searchParams.getAdminSearchParams().getCategories() != null) {
@@ -270,9 +328,25 @@ public class EventServiceImpl implements EventService {
         }
 
         List<Event> receivedEventList = eventRepository.findAll(booleanExpression, page).stream().toList();
+
+        List<Long> eventIds = receivedEventList.stream().map(Event::getId).toList();
+        Map<Long, Long> likesEventMap = likeServiceClient.getAllEventsLikesByIds(eventIds);
+
+        List<Long> locationIds = receivedEventList.stream().map(Event::getLocationId).toList();
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+
+        Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
+                RequestStatus.CONFIRMED, eventIds);
+
+        Map<Long, UserDto> users = userServiceClient.getAll(receivedEventList.stream()
+                .map(Event::getInitiatorId)
+                .toList());
+
         for (Event event : receivedEventList) {
-            event.setConfirmedRequests(requestRepository.countByStatusAndEventId(RequestStatus.CONFIRMED, event.getId()));
-            event.setLikes(eventRepository.countLikesByEventId(event.getId()));
+            event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
+            event.setLikes(likesEventMap.get(event.getId()));
+            event.setLocation(locationDtoMap.get(event.getLocationId()));
+            event.setInitiator(users.get(event.getInitiatorId()));
         }
 
         return receivedEventList
@@ -288,8 +362,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getById(EventGetByIdParams params, HitDto hitDto) {
         Event receivedEvent;
         if (params.initiatorId() != null) {
-            User user = userRepository.findById(params.initiatorId())
-                    .orElseThrow(() -> new NotFoundException("User with id " + params.initiatorId() + " not found"));
+            userServiceClient.checkExistence(params.initiatorId());
             receivedEvent = eventRepository.findByInitiatorIdAndId(params.initiatorId(), params.eventId())
                     .orElseThrow(() -> new NotFoundException(
                             "Event with id " + params.eventId() +
@@ -306,11 +379,15 @@ public class EventServiceImpl implements EventService {
             for (HitStatDto hitStatDto : hitStatDtoList) {
                 view += hitStatDto.getHits();
             }
+
             receivedEvent.setViews(view);
             receivedEvent.setConfirmedRequests(
-                    requestRepository.countByStatusAndEventId(RequestStatus.CONFIRMED, receivedEvent.getId()));
-            receivedEvent.setLikes(eventRepository.countLikesByEventId(receivedEvent.getId()));
+                    requestServiceClient.countByStatusAndEventId(RequestStatus.CONFIRMED, receivedEvent.getId()));
+            receivedEvent.setLikes(likeServiceClient.getCountByEventId(receivedEvent.getId()));
+            receivedEvent.setLocation(locationServiceClient.getById(receivedEvent.getLocationId()));
         }
+        UserDto initiator = userServiceClient.getById(receivedEvent.getInitiatorId());
+        receivedEvent.setInitiator(initiator);
         return eventMapper.eventToEventFullDto(receivedEvent);
     }
 
@@ -322,16 +399,14 @@ public class EventServiceImpl implements EventService {
         Event updatedEvent;
 
         if (updateParams.updateEventUserRequest() != null) { // private section
-            User user = userRepository.findById(updateParams.userId())
-                .orElseThrow(() -> new NotFoundException("User with id " + updateParams.userId() + " not found"));
-
+            userServiceClient.checkExistence(updateParams.userId());
             if (updateParams.updateEventUserRequest().category() != null) {
                 Category category = categoryRepository.findById(updateParams.updateEventUserRequest().category())
                         .orElseThrow(() -> new NotFoundException(
                                 "Category with id " + updateParams.updateEventUserRequest().category() + " not found"));
                 event.setCategory(category);
             }
-            if (!updateParams.userId().equals(event.getInitiator().getId())) {
+            if (!updateParams.userId().equals(event.getInitiatorId())) {
                 throw new AccessException("User with id = " + updateParams.userId() + " do not initiate this event");
             }
 
@@ -355,10 +430,12 @@ public class EventServiceImpl implements EventService {
                 switch (stateAction) {
                     case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
 
-                    case SEND_TO_REVIEW -> {
-                        event.setState(EventState.PENDING);
-                    }
+                    case SEND_TO_REVIEW -> event.setState(EventState.PENDING);
                 }
+            }
+
+            if(updateParams.updateEventUserRequest().location() != null) {
+                event.setLocationId(updateParams.updateEventUserRequest().location().id());
             }
 
             log.debug("Private. Событие до мапинга: {}", event);
@@ -394,7 +471,14 @@ public class EventServiceImpl implements EventService {
 
         updatedEvent = eventRepository.save(event);
 
-        updatedEvent.setLikes(eventRepository.countLikesByEventId(updatedEvent.getId()));
+        updatedEvent.setLikes(likeServiceClient.getCountByEventId(updatedEvent.getId()));
+
+        updatedEvent.setLocation(locationServiceClient.getById(updatedEvent.getLocationId()));
+
+        updatedEvent.setConfirmedRequests(requestServiceClient.countByStatusAndEventId(
+                RequestStatus.CONFIRMED, updatedEvent.getId()));
+
+        updatedEvent.setInitiator(userServiceClient.getById(updatedEvent.getInitiatorId()));
 
         log.debug("Событие возвращенное из базы: {} ; {}", event.getId(), event.getState());
 
@@ -402,31 +486,11 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventShortDto addLike(long userId, long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
-        Event event = eventRepository.findById(eventId)
+    public EventFullDto getByIdInternal(long eventId) {
+        Event savedEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id " + eventId + " not found"));
-        if (event.getState() != EventState.PUBLISHED) {
-            throw new ConflictException("Event with id " + eventId + " is not published");
-        }
-        eventRepository.addLike(userId, eventId);
-        event.setLikes(eventRepository.countLikesByEventId(eventId));
-        return eventMapper.eventToEventShortDto(event);
-    }
-
-    @Override
-    public void deleteLike(long userId, long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id " + eventId + " not found"));
-        boolean isLikeExist = eventRepository.checkLikeExisting(userId, eventId);
-        if (isLikeExist) {
-            eventRepository.deleteLike(userId, eventId);
-        } else {
-            throw new NotFoundException("Like for event: " + eventId + " by user: " + user.getId() + " not exist");
-        }
+        savedEvent.setInitiator(userServiceClient.getById(savedEvent.getInitiatorId()));
+        return eventMapper.eventToEventFullDto(savedEvent);
     }
 
 }

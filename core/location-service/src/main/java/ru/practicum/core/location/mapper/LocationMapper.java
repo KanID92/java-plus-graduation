@@ -9,4 +9,6 @@ import ru.practicum.core.location.entity.Location;
 public interface LocationMapper {
 
     LocationDto locationToLocationDto(Location location);
+
+    Location locationDtoToLocation(LocationDto locationDto);
 }

@@ -1,12 +1,12 @@
 package ru.practicum.ewm.service;
 
 import ru.practicum.HitDto;
+import ru.practicum.core.api.dto.event.EventFullDto;
+import ru.practicum.core.api.dto.event.EventShortDto;
+import ru.practicum.core.api.dto.event.NewEventDto;
 import ru.practicum.ewm.controller.params.EventGetByIdParams;
 import ru.practicum.ewm.controller.params.EventUpdateParams;
 import ru.practicum.ewm.controller.params.search.EventSearchParams;
-import ru.practicum.ewm.dto.event.EventFullDto;
-import ru.practicum.ewm.dto.event.EventShortDto;
-import ru.practicum.ewm.dto.event.NewEventDto;
 
 import java.util.List;
 
@@ -20,10 +20,6 @@ public interface EventService {
 
     List<EventFullDto> getAllByAdmin(EventSearchParams searchParams);
 
-    EventShortDto addLike(long userId, long eventId);
-
-    void deleteLike(long userId, long eventId);
-
     List<EventShortDto> getAllByInitiator(EventSearchParams searchParams);
 
     List<EventShortDto> getAllByPublic(EventSearchParams searchParams, HitDto hitDto);
@@ -31,4 +27,6 @@ public interface EventService {
     List<EventShortDto> getTopEvent(Integer count, HitDto hitDto);
 
     List<EventShortDto> getTopViewEvent(Integer count, HitDto hitDto);
+
+    EventFullDto getByIdInternal(long eventId);
 }

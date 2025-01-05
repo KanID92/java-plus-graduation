@@ -14,7 +14,9 @@ import ru.practicum.core.user.mapper.UserMapper;
 import ru.practicum.core.user.repository.UserRepository;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +65,23 @@ public class UserServiceImpl implements UserService {
     public void checkExistence(long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
+    }
+
+    @Override
+    public UserDto getById(long userId) {
+         User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
+        return userMapper.userToUserDto(user);
+    }
+
+    @Override
+    public Map<Long, UserDto> getByIds(List<Long> userIds) {
+        List<User> userList = userRepository.findAllById(userIds);
+        Map<Long, UserDto> usersMap = new HashMap<>();
+        for (User user : userList) {
+            usersMap.put(user.getId(), userMapper.userToUserDto(user));
+        }
+        return usersMap;
     }
 
 
