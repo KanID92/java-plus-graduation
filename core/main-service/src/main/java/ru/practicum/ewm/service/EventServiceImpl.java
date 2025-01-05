@@ -434,7 +434,7 @@ public class EventServiceImpl implements EventService {
                 }
             }
 
-            if(updateParams.updateEventUserRequest().location() != null) {
+            if (updateParams.updateEventUserRequest().location() != null) {
                 event.setLocationId(updateParams.updateEventUserRequest().location().id());
             }
 
