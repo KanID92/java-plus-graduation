@@ -186,9 +186,9 @@ public class RequestServiceImpl implements RequestService {
     @Override
     public Map<Long, Long> countByStatusAndEventsIds(RequestStatus status, List<Long> eventsIds) {
 
-        List<Map<Long,Long>> list = requestRepository.countByStatusAndEventsIds(RequestStatus.CONFIRMED.toString(), eventsIds);
+        List<Map<String,Long>> list = requestRepository.countByStatusAndEventsIds(RequestStatus.CONFIRMED.toString(), eventsIds);
         Map<Long, Long> eventRequestsWithStatus = new HashMap<>();
-        for (Map<Long, Long> row : list) {
+        for (Map<String, Long> row : list) {
             Long eventId = row.get("EVENT_ID");
             Long statusCount = row.get("EVENT_COUNT");
             eventRequestsWithStatus.put(eventId, statusCount);

@@ -36,7 +36,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             from REQUESTS where event_id in (:eventsIds) AND status = :status
             GROUP BY EVENT_ID
             """, nativeQuery = true)
-    List<Map<Long, Long>> countByStatusAndEventsIds(
+    List<Map<String, Long>> countByStatusAndEventsIds(
             @Param("status") String status, @Param("eventsIds") List<Long> eventsIds);
 
 }
