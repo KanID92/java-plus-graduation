@@ -17,10 +17,7 @@ public class PrivateLikeController {
 
 
     @PutMapping("/users/{userId}/events/{eventId}/likes")
-    public Long addEventLike( //Добавление лайка события
-                                 @PathVariable long userId,
-                                 @PathVariable long eventId
-    ) {
+    public Long addEventLike(@PathVariable long userId, @PathVariable long eventId) {
         log.info("==> PUT. /users/{userId}/events/{eventId}/likes" +
                 "Adding like for event with id: {} by user with id: {}", eventId, userId);
         Long countOfLikes = likeService.addEventLike(userId, eventId);
@@ -31,13 +28,10 @@ public class PrivateLikeController {
     }
 
     @DeleteMapping("/users/{userId}/events/{eventId}/likes")
-    public Long deleteEventLike( //удаление лайка события
-                           @PathVariable long userId,
-                           @PathVariable long eventId
-    ) {
+    public Long deleteEventLike(@PathVariable long userId, @PathVariable long eventId) {
         log.info("==> DELETE. /users/{userId}/events/{eventId}/likes" +
                 "Deleting like for event with id: {} by user with id: {}", eventId, userId);
-        Long countOfLikes= likeService.deleteEventLike(userId, eventId);
+        Long countOfLikes = likeService.deleteEventLike(userId, eventId);
         log.info("<== DELETE. /users/{userId}/events/{eventId}/likes" +
                 "Like for event with id: {} by user with id: {} deleted. Current count of likes: {}",
                 eventId, userId, countOfLikes);
@@ -45,10 +39,7 @@ public class PrivateLikeController {
     }
 
     @PutMapping("/users/{userId}/locations/{locationId}/likes")
-    public Long addLocationLike(//Добавление лайка на локацию
-                               @PathVariable long userId,
-                               @PathVariable long locationId) {
-
+    public Long addLocationLike(@PathVariable long userId, @PathVariable long locationId) {
         log.info("==> PUT. /users/{userId}/locations/{locationId}/likes" +
                 "Adding like for location with id: {} by user with id: {}", locationId, userId);
         Long locationLikesCount = likeService.addLocationLike(locationId, userId);
@@ -59,10 +50,7 @@ public class PrivateLikeController {
     }
 
     @DeleteMapping("/users/{userId}/locations/{locationId}/likes")
-    public Long deleteLocationLike( //удаление лайка на локацию
-                            @PathVariable long userId,
-                            @PathVariable long locationId
-    ) {
+    public Long deleteLocationLike(@PathVariable long userId, @PathVariable long locationId) {
         log.info("==> DELETE. /users/{userId}/locations/{locationId}/likes" +
                 "Deleting like for location with id: {} by user with id: {}", locationId, userId);
         Long locationLikesCount = likeService.deleteLocationLike(locationId, userId);
