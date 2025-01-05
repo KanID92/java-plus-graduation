@@ -39,7 +39,17 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
-      ewm-service:
+      event-service:
+        condition: service_healthy
+      location-service:
+        condition: service_healthy
+      like-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      stats-server:
+        condition: service_healthy
+      request-service:
         condition: service_healthy
     networks:
       - ewm-net
@@ -126,11 +136,11 @@ services:
       retries: 15
 
 
-  ewm-service:
-    build: core/main-service
-    container_name: ewm-main-service
+  event-service:
+    build: core/event-service
+    container_name: ewm-event-service
     depends_on:
-      ewm-db:
+      event-db:
         condition: service_healthy
       config-server:
         condition: service_healthy
@@ -139,7 +149,7 @@ services:
     networks:
       - ewm-net
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://event-db:5432/ewm-event
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
@@ -150,20 +160,21 @@ services:
       interval: 25s
       retries: 10
 
-  ewm-db:
+  event-db:
     image: postgres:16.1
-    container_name: postgres-ewm-main-db
+    container_name: postgres-ewm-event-db
     networks:
       - ewm-net
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root
-      - POSTGRES_DB=ewm-main
+      - POSTGRES_DB=ewm-event
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s
       interval: 10s
       retries: 15
+
                     ##  LIKES
   like-db:
     image: postgres:16.1
@@ -265,7 +276,7 @@ services:
     depends_on:
       request-db:
         condition: service_healthy
-      ewm-service:
+      event-service:
         condition: service_healthy
       config-server:
         condition: service_healthy

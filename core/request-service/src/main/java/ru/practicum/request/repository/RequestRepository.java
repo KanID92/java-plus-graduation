@@ -3,10 +3,12 @@ package ru.practicum.request.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.core.api.enums.RequestStatus;
 import ru.practicum.request.entity.Request;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestRepository extends JpaRepository<Request, Long> {
 
@@ -28,5 +30,13 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @Query(value = "SELECT r from Request r where r.status = ?1")
     List<Request> findAllByStatus(RequestStatus status);
+
+    @Query(value = """
+            select EVENT_ID, COUNT(*) as EVENT_COUNT
+            from REQUESTS where event_id in (:eventsIds) AND status = :status
+            GROUP BY EVENT_ID
+            """, nativeQuery = true)
+    List<Map<Long, Long>> countByStatusAndEventsIds(
+            @Param("status") String status, @Param("eventsIds") List<Long> eventsIds);
 
 }

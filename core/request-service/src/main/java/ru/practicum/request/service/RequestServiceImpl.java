@@ -18,9 +18,9 @@ import ru.practicum.core.api.exception.NotFoundException;
 import ru.practicum.request.controller.PrivateUpdateRequestParams;
 import ru.practicum.request.entity.Request;
 import ru.practicum.request.mapper.RequestMapper;
-import ru.practicum.request.repository.RequestJdbcRepository;
 import ru.practicum.request.repository.RequestRepository;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +31,6 @@ import java.util.Objects;
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
-    private final RequestJdbcRepository requestJdbcRepository;
 
     private final UserServiceClient userServiceClient;
     private final EventServiceClient eventServiceClient;
@@ -186,7 +185,15 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public Map<Long, Long> countByStatusAndEventsIds(RequestStatus status, List<Long> eventsIds) {
-        return requestJdbcRepository.countByStatusAndEventsIds(status, eventsIds);
+
+        List<Map<Long,Long>> list = requestRepository.countByStatusAndEventsIds(RequestStatus.CONFIRMED.toString(), eventsIds);
+        Map<Long, Long> eventRequestsWithStatus = new HashMap<>();
+        for (Map<Long, Long> row : list) {
+            Long eventId = row.get("EVENT_ID");
+            Long statusCount = row.get("EVENT_COUNT");
+            eventRequestsWithStatus.put(eventId, statusCount);
+        }
+        return eventRequestsWithStatus;
     }
 
 

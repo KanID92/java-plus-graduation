@@ -30,47 +30,47 @@ spring:
           predicates:
             - Path=/users/{userId}/events/{eventId}/likes/**
 
-        - id: main_service_event_admin_route
-          uri: lb://main-service
+        - id: event_service_event_admin_route
+          uri: lb://event-service
           predicates:
             - Path=/admin/events/**
 
-        - id: main_service_category_admin_route
-          uri: lb://main-service
+        - id: event_service_category_admin_route
+          uri: lb://event-service
           predicates:
             - Path=/admin/categories/**
 
-        - id: main_service_compilation_admin_route
-          uri: lb://main-service
+        - id: event_service_compilation_admin_route
+          uri: lb://event-service
           predicates:
             - Path=/admin/compilations/**
 
-        - id: main_service_event_internal_route
-          uri: lb://main-service
+        - id: event_service_event_internal_route
+          uri: lb://event-service
           predicates:
             - Path=/internal/events/**
 
-        - id: main_service_event_private_route_1
-          uri: lb://main-service
+        - id: event_service_event_private_route_1
+          uri: lb://event-service
           predicates:
             - Path=/users/{userId}/events
 
-        - id: main_service_event_private_route_2
-          uri: lb://main-service
+        - id: event_service_event_private_route_2
+          uri: lb://event-service
           predicates:
             - Path=/users/{userId}/events/{eventId}
-        - id: main_service_event_public_route
-          uri: lb://main-service
+        - id: event_service_event_public_route
+          uri: lb://event-service
           predicates:
             - Path=/events/**
 
-        - id: main_service_compilation_public_route
-          uri: lb://main-service
+        - id: event_service_compilation_public_route
+          uri: lb://event-service
           predicates:
             - Path=/compilations/**
 
-        - id: main_service_category_public_route
-          uri: lb://main-service
+        - id: event_service_category_public_route
+          uri: lb://event-service
           predicates:
             - Path=/categories/**
 
