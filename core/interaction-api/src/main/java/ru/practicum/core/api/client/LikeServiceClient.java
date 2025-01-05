@@ -33,6 +33,6 @@ public interface LikeServiceClient {
     Map<Long, Long> getTopLikedEventsIds(@RequestParam(required = false, defaultValue = "10") Integer count);
 
     @GetMapping("/internal/likes/locations/{locationId}")
-    public Long getCountByLocationId(@PathVariable Long locationId);
+    Long getCountByLocationId(@PathVariable Long locationId);
 
 }

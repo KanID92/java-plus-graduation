@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public class JdbcLikeRepository implements LikeRepository {
 
     @Override
     public Long addEventLike(long userId, long eventId) {
-        String sql = "merge into likes_events (event_id, user_id) values (:eventId, :userId)";
+        String sql = "INSERT into likes_events (event_id, user_id) values (:eventId, :userId)";
         jdbc.update(sql, Map.of("eventId", eventId, "userId", userId));
         return getCountByEventId(eventId);
     }
@@ -106,6 +107,25 @@ public class JdbcLikeRepository implements LikeRepository {
         return locationsLikes;
     }
 
+    @Override
+    public Optional<Boolean> isEventLiked(long eventId, long userId) {
+        String sql = """
+                SELECT EXISTS(SELECT * FROM LIKES_EVENTS WHERE EVENT_ID = :eventId AND USER_ID = :userId)
+                """;
+        return Optional.ofNullable(
+                jdbc.queryForObject(sql, Map.of("eventId", eventId, "userId", userId), Boolean.class));
+    }
+
+    @Override
+    public Optional<Boolean> isLocationLiked(long locationId, long userId) {
+        String sql = """
+                SELECT EXISTS(SELECT * FROM LIKES_LOCATIONS WHERE LOCATION_ID = :locationId AND USER_ID = :userId)
+                """;
+        return Optional.ofNullable(
+                jdbc.queryForObject(sql, Map.of("locationId", locationId, "userId", userId), Boolean.class));
+    }
+
+    @Override
     public Long getCountByLocationId(long locationId) {
         String sql = "select count(*) from likes_locations where location_id = :locationId";
         return jdbc.queryForObject(sql, Map.of("locationId", locationId), Long.class);

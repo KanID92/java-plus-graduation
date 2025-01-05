@@ -208,7 +208,7 @@ public class EventServiceImpl implements EventService {
         List<Event> eventTopList = eventRepository.findAllByIdIn(topEventsIds);
 
         Map<Long, UserDto> users = userServiceClient.getAll(eventTopList.stream()
-                .map(event -> event.getInitiator().id())
+                .map(Event::getInitiatorId)
                 .toList());
 
         List<Long> locationIds = eventTopList.stream().map(Event::getLocationId).toList();
@@ -282,7 +282,7 @@ public class EventServiceImpl implements EventService {
                 .toList());
 
         for (Event event : result) {
-            event.setInitiator(users.get(event.getInitiator().id()));
+            event.setInitiator(users.get(event.getInitiatorId()));
         }
 
         return result.stream()

@@ -3,6 +3,7 @@ package ru.practicum.like.repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface LikeRepository {
 
@@ -26,6 +27,9 @@ public interface LikeRepository {
 
     Map<Long, Long> getTopLikedLocationsIds(Integer count);
 
+    Optional<Boolean> isEventLiked(long eventId, long userId);
+
+    Optional<Boolean> isLocationLiked(long locationId, long userId);
 
 
 }

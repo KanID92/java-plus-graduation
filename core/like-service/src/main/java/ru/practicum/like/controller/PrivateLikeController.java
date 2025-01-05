@@ -20,7 +20,7 @@ public class PrivateLikeController {
     public Long addEventLike(@PathVariable long userId, @PathVariable long eventId) {
         log.info("==> PUT. /users/{userId}/events/{eventId}/likes" +
                 "Adding like for event with id: {} by user with id: {}", eventId, userId);
-        Long countOfLikes = likeService.addEventLike(userId, eventId);
+        Long countOfLikes = likeService.addEventLike(eventId, userId);
         log.info("<== PUT. /users/{userId}/events/{eventId}/likes" +
                 "Like for event with id: {} by user with id: {} added. Current count of likes: {}",
                 eventId, userId, countOfLikes);
@@ -30,8 +30,8 @@ public class PrivateLikeController {
     @DeleteMapping("/users/{userId}/events/{eventId}/likes")
     public Long deleteEventLike(@PathVariable long userId, @PathVariable long eventId) {
         log.info("==> DELETE. /users/{userId}/events/{eventId}/likes" +
-                "Deleting like for event with id: {} by user with id: {}", eventId, userId);
-        Long countOfLikes = likeService.deleteEventLike(userId, eventId);
+                " Deleting like for event with id: {} by user with id: {}", userId, eventId);
+        Long countOfLikes = likeService.deleteEventLike(eventId, userId);
         log.info("<== DELETE. /users/{userId}/events/{eventId}/likes" +
                 "Like for event with id: {} by user with id: {} deleted. Current count of likes: {}",
                 eventId, userId, countOfLikes);
