@@ -24,7 +24,7 @@ public abstract class EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "likes", ignore = true)
     public abstract Event newEventDtoToEvent(
             NewEventDto newEventDto, Long initiatorId, Category category, Long locationId, LocalDateTime createOn);

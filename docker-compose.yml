@@ -127,22 +127,19 @@ services:
       retries: 10
 
                                                 ## STATS
-  stats-server:
-    build: stats/stats-server
-    container_name: ewm-stats-server
-    ports:
-      - "9090:9090"
+
+  stats-collector:
+    build: stats/collector
+    container_name: ewm-stats-collector
     depends_on:
-      stats-db:
+      kafka:
         condition: service_healthy
       config-server:
         condition: service_healthy
     networks:
       - ewm-net
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SERVER_PORT=8087
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     healthcheck:
       test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
@@ -150,14 +147,57 @@ services:
       interval: 15s
       retries: 10
 
+  stats-aggregator:
+    build: stats/aggregator
+    container_name: ewm-stats-aggregator
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - ewm-net
+    environment:
+      - SERVER_PORT=8084
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+    healthcheck:
+      test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
+      timeout: 5s
+      interval: 15s
+      retries: 10
 
-  stats-db:
+  stats-analyzer:
+    build: stats/analyzer
+    container_name: ewm-stats-analyzer
+    depends_on:
+      stats-analyzer-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - ewm-net
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats-analyzer-db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SERVER_PORT=8085
+    healthcheck:
+      test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
+      timeout: 5s
+      interval: 15s
+      retries: 10
+
+
+  stats-analyzer-db:
     image: postgres:16.1
-    container_name: postgres-ewm-stats-db
+    container_name: postgres-ewm-stats-analyzer-db
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root
-      - POSTGRES_DB=ewm-stats
+      - POSTGRES_DB=ewm-stats-analyzer-db
     networks:
       - ewm-net
     healthcheck:

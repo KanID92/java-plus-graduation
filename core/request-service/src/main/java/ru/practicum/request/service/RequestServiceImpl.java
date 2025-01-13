@@ -196,5 +196,10 @@ public class RequestServiceImpl implements RequestService {
         return eventRequestsWithStatus;
     }
 
+    @Override
+    public boolean existsByEventIdAndRequesterIdAndStatus(long eventId, long requesterId, RequestStatus status) {
+        return requestRepository.existsByEventIdAndRequesterIdAndStatus(eventId, requesterId, status);
+    }
+
 
 }

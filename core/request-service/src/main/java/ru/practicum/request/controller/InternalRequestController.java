@@ -33,5 +33,11 @@ public class InternalRequestController {
         return counts;
     }
 
+    @GetMapping("/{eventId}/{userId}/status")
+    public boolean isUserHasConfirmedRequest(@PathVariable long eventId, @PathVariable long userId) {
+        log.info("|| ==> GET /internal/requests//{eventId}/{userId}/status");
+        return requestService.existsByEventIdAndRequesterIdAndStatus(eventId, userId, RequestStatus.CONFIRMED);
+    }
+
 
 }

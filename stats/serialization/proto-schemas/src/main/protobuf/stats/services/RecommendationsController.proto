@@ -10,14 +10,14 @@ option java_package = "ru.yandex.practicum.grpc.stats.recommendations";
 service RecommendationsController {
 
   // Возвращает поток рекомендованных мероприятий для указанного пользователя
-  rpc GetRecommendationsForUser (UserPredictionsRequestProto) returns (RecommendedEventProto);
+  rpc GetRecommendationsForUser (UserPredictionsRequestProto) returns (stream RecommendedEventProto);
 
   // Возвращает поток мероприятий, с которыми не взаимодействовал этот пользователь,
   // но которые максимально похожи на указанное мероприятие
-  rpc GetSimilarEvents (SimilarEventsRequestProto) returns (RecommendedEventProto);
+  rpc GetSimilarEvents (SimilarEventsRequestProto) returns (stream RecommendedEventProto);
 
   // Получает идентификаторы мероприятий и возвращает их поток с суммой максимальных весов действий
   // каждого пользователя с этими мероприятиями
-  rpc GetInteractionsCount (InteractionsCountRequestProto) returns (RecommendedEventProto);
+  rpc GetInteractionsCount (InteractionsCountRequestProto) returns (stream RecommendedEventProto);
 
 }

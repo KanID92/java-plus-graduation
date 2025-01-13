@@ -2,10 +2,12 @@ package ru.practicum.like.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.core.api.client.EventServiceClient;
 import ru.practicum.core.api.client.LocationServiceClient;
+import ru.practicum.core.api.client.RequestServiceClient;
+import ru.practicum.core.api.constant.UserActionType;
 import ru.practicum.core.api.dto.event.EventFullDto;
-import ru.practicum.core.api.dto.location.LocationDto;
 import ru.practicum.core.api.enums.EventState;
 import ru.practicum.core.api.exception.ConflictException;
 import ru.practicum.core.api.exception.NotFoundException;
@@ -22,6 +24,8 @@ public class GeneralLikeService implements LikeService {
     private final LikeRepository likeRepository;
     private final EventServiceClient eventServiceClient;
     private final LocationServiceClient locationServiceClient;
+    private final CollectorClient collectorClient;
+    private final RequestServiceClient requestService;
 
     @Override
     public Map<Long, Long> getAllEventsLikesByIds(List<Long> eventIdList) {
@@ -44,7 +48,13 @@ public class GeneralLikeService implements LikeService {
         if (eventFullDto.state() != EventState.PUBLISHED) {
             throw new ConflictException("Event with id " + eventId + " is not published. Can't add like event");
         }
-        return likeRepository.addEventLike(userId, eventId);
+        if (!requestService.isUserHasConfirmedRequest(eventId, userId)) {
+           throw new ConflictException(
+                   "User does not have permission to add like event. Request is not confirmed, or dont exist");
+        }
+        Long eventLikeCounts = likeRepository.addEventLike(userId, eventId);
+        collectorClient.sendUserAction(userId, eventId, UserActionType.LIKE.toString());
+        return eventLikeCounts;
     }
 
     @Override
@@ -60,7 +70,7 @@ public class GeneralLikeService implements LikeService {
 
     @Override
     public Long addLocationLike(Long locationId, Long userId) {
-        LocationDto locationDto = locationServiceClient.getById(locationId);
+        locationServiceClient.getById(locationId);
         return likeRepository.addLocationLike(locationId, userId);
     }
 
