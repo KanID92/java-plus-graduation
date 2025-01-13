@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+option java_package = "ru.yandex.practicum.grpc.stats.request";
+
+message InteractionsCountRequestProto {
+  repeated int64 event_id = 1;
+}
