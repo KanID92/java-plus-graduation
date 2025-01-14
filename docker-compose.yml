@@ -47,7 +47,7 @@ services:
         condition: service_healthy
       user-service:
         condition: service_healthy
-      stats-server:
+      stats-analyzer:
         condition: service_healthy
       request-service:
         condition: service_healthy
@@ -60,6 +60,8 @@ services:
     image: confluentinc/confluent-local:7.4.3
     hostname: kafka
     container_name: kafka
+    networks:
+      - ewm-net
     ports:
       - "9092:9092" # for client connections
       - "9101:9101" # JMX
@@ -132,17 +134,15 @@ services:
     build: stats/collector
     container_name: ewm-stats-collector
     depends_on:
-      kafka:
-        condition: service_healthy
       config-server:
         condition: service_healthy
     networks:
       - ewm-net
     environment:
-      - SERVER_PORT=8087
+      - SERVER_PORT=8083
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     healthcheck:
-      test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
+      test: "curl --fail --silent localhost:8083/actuator/health | grep UP || exit 1"
       timeout: 5s
       interval: 15s
       retries: 10
@@ -151,8 +151,6 @@ services:
     build: stats/aggregator
     container_name: ewm-stats-aggregator
     depends_on:
-      kafka:
-        condition: service_healthy
       config-server:
         condition: service_healthy
     networks:
@@ -161,7 +159,7 @@ services:
       - SERVER_PORT=8084
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     healthcheck:
-      test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
+      test: "curl --fail --silent localhost:8084/actuator/health | grep UP || exit 1"
       timeout: 5s
       interval: 15s
       retries: 10
@@ -172,20 +170,18 @@ services:
     depends_on:
       stats-analyzer-db:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
       config-server:
         condition: service_healthy
     networks:
       - ewm-net
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats-analyzer-db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-analyzer-db:5432/ewm-stats-analyzer-db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
       - SERVER_PORT=8085
     healthcheck:
-      test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
+      test: "curl --fail --silent localhost:8085/actuator/health | grep UP || exit 1"
       timeout: 5s
       interval: 15s
       retries: 10
@@ -215,7 +211,7 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      stats-server:
+      stats-analyzer:
         condition: service_healthy
     networks:
       - ewm-net

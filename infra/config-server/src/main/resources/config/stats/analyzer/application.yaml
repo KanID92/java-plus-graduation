@@ -4,9 +4,9 @@ analyzer:
       "bootstrap.servers": kafka:29092
       "group.id": analyzer-user-actions-group
       "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
-      "value.deserializer": kafka.serializer.UserActionsDeserializer
+      "value.deserializer": kafka.serializer.UserActionDeserializer
     event-similarity-properties:
-      "bootstrap.servers": localhost:9092
+      "bootstrap.servers": kafka:29092
       "group.id": analyzer-event-similarity-group
       "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
       "value.deserializer": kafka.serializer.EventSimilarityDeserializer
@@ -26,7 +26,7 @@ grpc:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://stats-db:5432/ewm-stats-analyzer-db
+    url: jdbc:postgresql://stats-analyzer-db:5432/ewm-stats-analyzer-db
     username: root
     password: root
   jpa:
