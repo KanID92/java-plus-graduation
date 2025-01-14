@@ -32,7 +32,7 @@ public class EventSimilarityProcessor implements Runnable {
     @Override
     public void run() {
         log.info("Starting event similarity processor...");
-        try(eventSimilarityConsumer) {
+        try (eventSimilarityConsumer) {
             Runtime.getRuntime().addShutdownHook(new Thread(eventSimilarityConsumer::wakeup));
             eventSimilarityConsumer.subscribe(List.of(kafkaConfig.getTopics().get("event-similarity")));
 

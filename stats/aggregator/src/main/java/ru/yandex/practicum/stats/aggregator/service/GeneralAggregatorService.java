@@ -85,7 +85,7 @@ public class GeneralAggregatorService implements AggregatorService {
                 similarities = getSimilarities(userAction);
             }
 
-            if(!similarities.isEmpty()) {
+            if (!similarities.isEmpty()) {
                 for (EventSimilarityAvro eventSimilarityAvro : similarities) {
                     sendSimilarity(eventSimilarityAvro);
                 }
@@ -102,7 +102,7 @@ public class GeneralAggregatorService implements AggregatorService {
         double receivedWeight = userActionRepository.getWeightFromAvro(actionTypeAvro);
         double oldWeight = userActionRepository.getActionsByEvent(eventIdA).getOrDefault(userId,0.0);
 
-        if(receivedWeight > oldWeight) {
+        if (receivedWeight > oldWeight) {
             userActionRepository.save(userActionAvro);
             similarities = countSimilarities(eventIdA, userId, oldWeight, receivedWeight);
         } else {
@@ -197,7 +197,7 @@ public class GeneralAggregatorService implements AggregatorService {
                 new ProducerRecord<>(
                         kafkaConfig.getTopics().get("sensors-snapshots"), null, null, similarityAvro);
         log.info("Sending similarityAvro {}", similarityRecord);
-        try(producer) {
+        try (producer) {
             producer.send(similarityRecord);
             producer.flush();
             Thread.sleep(3000);

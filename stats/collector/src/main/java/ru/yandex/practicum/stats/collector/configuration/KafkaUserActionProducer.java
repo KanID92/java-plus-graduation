@@ -13,7 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@Getter @Setter @ToString
+@Getter
+@Setter
+@ToString
 public class KafkaUserActionProducer {
     private final KafkaProducer<String, SpecificRecordBase> producer;
     private final KafkaConfig config;
@@ -28,7 +30,7 @@ public class KafkaUserActionProducer {
     }
 
     public void sendRecord(ProducerRecord<String, SpecificRecordBase> record) {
-        try(producer) {
+        try (producer) {
             producer.send(record);
             producer.flush();
             Thread.sleep(3000);

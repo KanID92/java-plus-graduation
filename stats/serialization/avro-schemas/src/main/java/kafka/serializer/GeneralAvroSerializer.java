@@ -17,7 +17,7 @@ public class GeneralAvroSerializer implements Serializer<SpecificRecordBase> {
 
     @Override
     public byte[] serialize(String topic, SpecificRecordBase data) {
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             byte[] result = null;
             encoder = EncoderFactory.get().binaryEncoder(baos, null);
             if (data != null) {

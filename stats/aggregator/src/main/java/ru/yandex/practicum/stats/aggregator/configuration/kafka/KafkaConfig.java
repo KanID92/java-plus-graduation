@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.Properties;
 
-@Getter @Setter @ToString
+@Getter
+@Setter
+@ToString
 @ConfigurationProperties("aggregator.kafka")
 @Component
 public class KafkaConfig {

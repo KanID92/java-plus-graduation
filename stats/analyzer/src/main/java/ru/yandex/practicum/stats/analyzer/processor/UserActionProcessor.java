@@ -34,7 +34,7 @@ public class UserActionProcessor implements Runnable {
     public void run() {
         log.info("Starting UserActionsProcessor");
 
-        try(userActionsKafkaConsumer) {
+        try (userActionsKafkaConsumer) {
             Runtime.getRuntime().addShutdownHook(new Thread(userActionsKafkaConsumer::wakeup));
             userActionsKafkaConsumer.subscribe(List.of(kafkaConfig.getTopics().get("user-actions")));
 
