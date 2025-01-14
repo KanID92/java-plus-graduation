@@ -86,47 +86,16 @@ public class PublicEventController {
             @RequestParam(required = false, defaultValue = "10") Integer count) {
         log.info("==> GET /events/top");
 
-//        HitDto hitDto = new HitDto(
-//                null,
-//                "ewm-service",
-//                httpRequest.getRequestURI(),
-//                httpRequest.getRemoteAddr(),
-//                LocalDateTime.now().format(dateTimeFormatter));
-
         List<EventShortDto> eventShortDtoList = eventService.getTopEvent(count);
         log.info("<== GET /events Returning top {} events.", count);
         return eventShortDtoList;
     }
-
-//    @GetMapping("/top-view")
-//    public List<EventShortDto> getTopView(
-//            @RequestParam(required = false, defaultValue = "10") Integer count,
-//            HttpServletRequest httpRequest) {
-//        log.info("==> GET /events/top-view");
-//
-//        HitDto hitDto = new HitDto(
-//                null,
-//                "ewm-service",
-//                httpRequest.getRequestURI(),
-//                httpRequest.getRemoteAddr(),
-//                LocalDateTime.now().format(dateTimeFormatter));
-//
-//        List<EventShortDto> eventShortDtoList = eventService.getTopViewEvent(count, hitDto);
-//        log.info("<== GET /events Returning top view {} events.", count);
-//        return eventShortDtoList;
-//    }
 
     @GetMapping("/{id}")
     @Transactional
     public EventFullDto getById(
             @PathVariable Long id, @RequestHeader("X-EWM-USER-ID") long userId) {
         log.info("==> GET /events/{}  Public getById", id);
-//        HitDto hitDto = new HitDto(
-//                null,
-//                "ewm-service",
-//                httpRequest.getRequestURI(),
-//                httpRequest.getRemoteAddr(),
-//                LocalDateTime.now().format(dateTimeFormatter));
         EventFullDto eventFullDto = eventService.getById(new EventGetByIdParams(null, id));
         if (eventFullDto.state() != EventState.PUBLISHED) {
             throw new NotFoundException("Нет опубликованных событий с id " + id);

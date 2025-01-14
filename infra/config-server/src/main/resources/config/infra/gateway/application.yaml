@@ -69,7 +69,7 @@ spring:
           uri: lb://event-service
           predicates:
             - Path=/events/{id}
-            -
+
         - id: event_service_event_public_get_top_route
           uri: lb://event-service
           predicates:

@@ -25,7 +25,5 @@ public interface EventService {
 
     List<EventShortDto> getTopEvent(Integer count);
 
-//    List<EventShortDto> getTopViewEvent(Integer count, HitDto hitDto);
-
     EventFullDto getByIdInternal(long eventId);
 }

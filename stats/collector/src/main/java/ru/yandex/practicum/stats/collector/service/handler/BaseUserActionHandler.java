@@ -14,7 +14,7 @@ public abstract class BaseUserActionHandler implements UserActionHandler {
 
     public BaseUserActionHandler(KafkaUserActionProducer kafkaProducer) {
         this.producer = kafkaProducer;
-        topic = kafkaProducer.getConfig().getTopics().get("user-actions");
+        topic = kafkaProducer.getConfig().getUserActionsTopic();
     }
 
     @Override

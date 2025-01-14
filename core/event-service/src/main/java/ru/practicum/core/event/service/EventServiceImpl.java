@@ -189,9 +189,6 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     public List<EventShortDto> getTopEvent(Integer count) {
 
-//        String rangeEnd = LocalDateTime.now().format(dateTimeFormatter);
-//        String rangeStart = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
-
         Map<Long, Long> likesEventMap = likeServiceClient.getTopLikedEventsIds(count);
         List<Long> topEventsIds = new ArrayList<>(likesEventMap.keySet());
         List<Event> eventTopList = eventRepository.findAllByIdIn(topEventsIds);

@@ -3,20 +3,26 @@ package ru.yandex.practicum.stats.collector.configuration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-import java.util.Properties;
 
 @Getter
 @Setter
 @ToString
-@ConfigurationProperties("collector.kafka")
 @Component
 public class KafkaConfig {
 
-    private Map<String, String> topics;
-    private Properties producerProperties;
+    @Value("${collector.kafka.topics.user-actions}")
+    private String userActionsTopic;
+
+    @Value("${collector.kafka.producer-properties.bootstrap.servers}")
+    private String bootstrapServers;
+
+    @Value("${collector.kafka.producer-properties.key.serializer}")
+    private String keySerializer;
+
+    @Value("${collector.kafka.producer-properties.value.serializer}")
+    private String valueSerializer;
+
 
 }
