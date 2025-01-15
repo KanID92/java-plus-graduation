@@ -10,7 +10,7 @@ import ru.practicum.core.api.client.RequestServiceClient;
 
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"ru.practicum.client"})
+@ComponentScan(basePackages = {"ru.practicum.like", "ru.practicum.client"})
 @EnableFeignClients(clients = {EventServiceClient.class, LocationServiceClient.class, RequestServiceClient.class})
 public class LikeApp {
     public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package ru.practicum.core.event.config.feign;
+package ru.practicum.core.event.config;
 
 
 import feign.Feign;

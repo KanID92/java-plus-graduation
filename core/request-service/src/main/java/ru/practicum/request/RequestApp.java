@@ -9,7 +9,7 @@ import ru.practicum.core.api.client.UserServiceClient;
 
 @SpringBootApplication
 @EnableFeignClients(clients = {EventServiceClient.class, UserServiceClient.class})
-@ComponentScan(basePackages = {"ru.practicum.client"})
+@ComponentScan(basePackages = {"ru.practicum.request","ru.practicum.client"})
 public class RequestApp {
     public static void main(String[] args) {
         SpringApplication.run(RequestApp.class, args);

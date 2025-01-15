@@ -18,7 +18,7 @@ spring:
         - id: like_service_internal_route
           uri: lb://like-service
           predicates:
-            - Path=//internal/likes/**
+            - Path=/internal/likes/**
 
         - id: like_service_private_location_route
           uri: lb://like-service

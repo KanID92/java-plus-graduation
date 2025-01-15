@@ -208,7 +208,6 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
                 RequestStatus.CONFIRMED, topEventsIds);
 
-        //statClient.saveHit(hitDto);
 
         for (Event event : eventTopList) {
             event.setRating(getRatingFromAnalyzer(event.getId()));
@@ -425,9 +424,12 @@ public class EventServiceImpl implements EventService {
 
         Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> interactionsCountStream =
                 analyzerClient.getInteractionsCount(List.of(eventId));
-        return interactionsCountStream.findFirst()
+        log.info("getRatingFromAnalyzer. Received from client: {}", interactionsCountStream);
+        double result = interactionsCountStream.findFirst()
                 .map(RecommendedEventProtoOuterClass.RecommendedEventProto::getScore)
                 .orElse(0.0);
+        log.info("getRatingFromAnalyzer. Counted result: {}", result);
+        return result;
     }
 
 }

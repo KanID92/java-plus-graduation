@@ -17,7 +17,7 @@ public interface LikeServiceClient {
     @PutMapping("/users/{userId}/events/{eventId}/likes") //Добавление лайка события
     Long addEventLike(@PathVariable long userId, @PathVariable long eventId);
 
-    @DeleteMapping("/users/{userId}/events//{eventId}/likes") //удаление лайка события
+    @DeleteMapping("/users/{userId}/events/{eventId}/likes") //удаление лайка события
     Long deleteEventLike(@PathVariable long userId, @PathVariable long eventId);
 
     @GetMapping("/internal/likes/events") //Получение количества лайков событий по списку id
