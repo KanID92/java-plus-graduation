@@ -7,7 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.client.AnalyzerClient;
 import ru.practicum.core.api.client.LikeServiceClient;
 import ru.practicum.core.api.client.LocationServiceClient;
 import ru.practicum.core.api.client.RequestServiceClient;
@@ -34,14 +33,12 @@ import ru.practicum.core.event.entity.Event;
 import ru.practicum.core.event.mapper.EventMapper;
 import ru.practicum.core.event.repository.CategoryRepository;
 import ru.practicum.core.event.repository.EventRepository;
-import ru.yandex.practicum.grpc.stats.request.RecommendedEventProtoOuterClass;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static ru.practicum.core.event.entity.QEvent.event;
 
@@ -58,7 +55,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestServiceClient requestServiceClient;
 
-    private final AnalyzerClient analyzerClient;
+//    private final AnalyzerClient analyzerClient;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(Constants.JSON_TIME_FORMAT);
 
@@ -210,7 +207,7 @@ public class EventServiceImpl implements EventService {
 
 
         for (Event event : eventTopList) {
-            event.setRating(getRatingFromAnalyzer(event.getId()));
+//TODO            event.setRating(getRatingFromAnalyzer(event.getId()));
             event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
             event.setLikes(likesEventMap.get(event.getId()));
             event.setLocation(locationDtoMap.get(event.getLocationId()));
@@ -305,9 +302,9 @@ public class EventServiceImpl implements EventService {
             receivedEvent = eventRepository.findById(params.eventId())
                     .orElseThrow(() -> new NotFoundException("Event with id " + params.eventId() + " not found"));
 
-            double rating = getRatingFromAnalyzer(params.eventId());
+//TODO            double rating = getRatingFromAnalyzer(params.eventId());
 
-            receivedEvent.setRating(rating);
+//TODO            receivedEvent.setRating(rating);
             receivedEvent.setConfirmedRequests(
                     requestServiceClient.countByStatusAndEventId(RequestStatus.CONFIRMED, receivedEvent.getId()));
             receivedEvent.setLikes(likeServiceClient.getCountByEventId(receivedEvent.getId()));
@@ -420,16 +417,16 @@ public class EventServiceImpl implements EventService {
         return eventMapper.eventToEventFullDto(savedEvent);
     }
 
-    private double getRatingFromAnalyzer(long eventId) {
-
-        Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> interactionsCountStream =
-                analyzerClient.getInteractionsCount(List.of(eventId));
-        log.info("getRatingFromAnalyzer. Received from client: {}", interactionsCountStream);
-        double result = interactionsCountStream.findFirst()
-                .map(RecommendedEventProtoOuterClass.RecommendedEventProto::getScore)
-                .orElse(0.0);
-        log.info("getRatingFromAnalyzer. Counted result: {}", result);
-        return result;
-    }
+//TODO    private double getRatingFromAnalyzer(long eventId) {
+//
+//        Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> interactionsCountStream =
+//                analyzerClient.getInteractionsCount(List.of(eventId));
+//        log.info("getRatingFromAnalyzer. Received from client: {}", interactionsCountStream);
+//        double result = interactionsCountStream.findFirst()
+//                .map(RecommendedEventProtoOuterClass.RecommendedEventProto::getScore)
+//                .orElse(0.0);
+//        log.info("getRatingFromAnalyzer. Counted result: {}", result);
+//        return result;
+//    }
 
 }

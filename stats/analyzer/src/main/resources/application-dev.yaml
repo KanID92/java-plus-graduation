@@ -1,12 +1,12 @@
 analyzer:
   kafka:
     user-actions-properties:
-      "bootstrap.servers": kafka:29092
+      "bootstrap.servers": localhost:9092
       "group.id": analyzer-user-actions-group
       "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
       "value.deserializer": kafka.serializer.UserActionDeserializer
     event-similarity-properties:
-      "bootstrap.servers": kafka:29092
+      "bootstrap.servers": localhost:9092
       "group.id": analyzer-event-similarity-group
       "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
       "value.deserializer": kafka.serializer.EventSimilarityDeserializer
@@ -21,16 +21,23 @@ grpc:
   client:
     analyzer:
       address: 'discovery:///analyzer'
-      enableKeepAlive: false
-      keepAliveWithoutCalls: false
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
       negotiationType: plaintext
 
+
 spring:
+  application:
+    name: analyzer
+  cloud:
+    config:
+      enabled: false
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://stats-analyzer-db:5432/ewm-stats-analyzer-db
+    url: jdbc:h2:mem:analyzer
     username: root
     password: root
+
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -44,3 +51,15 @@ spring:
     init:
       mode: always
 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    hostname: localhost
+    instance-id: "${spring.application.name}:${random.value}"
+    lease-renewal-interval-in-seconds: 10
+
+server:
+  port: 9999
