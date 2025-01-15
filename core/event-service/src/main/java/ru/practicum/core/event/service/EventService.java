@@ -26,4 +26,6 @@ public interface EventService {
     List<EventShortDto> getTopEvent(Integer count);
 
     EventFullDto getByIdInternal(long eventId);
+
+    Long addEventLike(long userId, long eventId);
 }

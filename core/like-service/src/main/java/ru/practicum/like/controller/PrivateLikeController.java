@@ -2,7 +2,10 @@ package ru.practicum.like.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.like.service.LikeService;
 
 @Slf4j
@@ -13,8 +16,8 @@ public class PrivateLikeController {
     private final LikeService likeService;
 
 
-    @PutMapping("/events/{eventId}/like")
-    public Long addEventLike(@RequestHeader("X-EWM-USER-ID") long userId, @PathVariable long eventId) {
+    @PutMapping("/users/{userId}/events/{eventId}/likes")
+    public Long addEventLike(@PathVariable long userId, @PathVariable long eventId) {
         log.info("==> PUT. /events/{eventId}/like" +
                 "Adding like for event with id: {} by user with id: {}", eventId, userId);
         Long countOfLikes = likeService.addEventLike(eventId, userId);

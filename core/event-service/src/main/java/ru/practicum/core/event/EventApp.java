@@ -11,8 +11,7 @@ import ru.practicum.core.api.client.UserServiceClient;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"ru.practicum.core.event", "ru.practicum.client"})
-@EnableFeignClients(clients = {UserServiceClient.class, LocationServiceClient.class,
-        LikeServiceClient.class, RequestServiceClient.class})
+@EnableFeignClients(clients = {UserServiceClient.class, LocationServiceClient.class, LikeServiceClient.class, RequestServiceClient.class})
 public class EventApp {
 
     public static void main(String[] args) {

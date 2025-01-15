@@ -44,6 +44,17 @@ public class PublicEventController {
         return result;
     }
 
+    @PutMapping("/{eventId}/like")
+    public Long addEventLike(@RequestHeader("X-EWM-USER-ID") long userId, @PathVariable long eventId) {
+        log.info("==> PUT. /events/{eventId}/like" +
+                "Adding like for event with id: {} by user with id: {}", eventId, userId);
+        Long countOfLikes = eventService.addEventLike(eventId, userId);
+        log.info("<== PUT. /users/{userId}/events/{eventId}/likes" +
+                "Like for event with id: {} by user with id: {} added. Current count of likes: {}",
+                eventId, userId, countOfLikes);
+        return countOfLikes;
+    }
+
     @GetMapping
     public List<EventShortDto> getAll(
             @RequestParam(required = false) String text,

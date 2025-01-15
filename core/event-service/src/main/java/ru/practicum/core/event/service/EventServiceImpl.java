@@ -77,6 +77,11 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public Long addEventLike(long userId, long eventId) {
+        return likeServiceClient.addEventLike(userId, eventId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getAllByInitiator(EventSearchParams searchParams) {
 
@@ -206,16 +211,6 @@ public class EventServiceImpl implements EventService {
         //statClient.saveHit(hitDto);
 
         for (Event event : eventTopList) {
-//            List<HitStatDto> hitStatDtoList = statClient.getStats(
-//                    rangeStart,
-//                    rangeEnd,
-//                    List.of("/event/" + event.getId()),
-//                    true);
-//            Long view = 0L;
-//            for (HitStatDto hitStatDto : hitStatDtoList) {
-//                view += hitStatDto.getHits();
-//            }
-
             event.setRating(getRatingFromAnalyzer(event.getId()));
             event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
             event.setLikes(likesEventMap.get(event.getId()));
@@ -228,54 +223,7 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<EventShortDto> getTopViewEvent(Integer count, HitDto hitDto) {
-//
-//        String rangeEnd = LocalDateTime.now().format(dateTimeFormatter);
-//        String rangeStart = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
-//
-//        statClient.saveHit(hitDto);
-//
-//        List<HitStatDto> hitStatDtoList = statClient.getStats(
-//                rangeStart,
-//                rangeEnd,
-//                null,
-//                true);
-//
-//        Map<Long, Long> idsMap = hitStatDtoList.stream().filter(it -> it.getUri().matches("\\/events\\/\\d+$"))
-//                        .collect((Collectors.groupingBy(dto ->
-//                                Long.parseLong(dto.getUri().replace("/events/", "")),
-//                                Collectors.summingLong(HitStatDto::getHits))));
-//
-//        Set<Long> ids = idsMap.keySet();
-//        List<Event> eventListBySearch = eventRepository.findAllById(ids);
-//        List<Event> result = new ArrayList<>();
-//        idsMap.entrySet().stream()
-//                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-//                .limit(count)
-//                .forEach(it -> {
-//                            Optional<Event> e = eventListBySearch.stream().filter(event ->
-//                                    event.getId() == it.getKey()).findFirst();
-//                            if (e.isPresent()) {
-//                                Event eventRes = e.get();
-//                                eventRes.setViews(it.getValue());
-//                                result.add(eventRes);
-//                            }
-//                        }
-//                );
-//        Map<Long, UserDto> users = userServiceClient.getAll(result.stream()
-//                .map(Event::getInitiatorId)
-//                .toList());
-//
-//        for (Event event : result) {
-//            event.setInitiator(users.get(event.getInitiatorId()));
-//        }
-//
-//        return result.stream()
-//                .map(eventMapper::eventToEventShortDto)
-//                .toList();
-//    }
+
 
     @Override
     @Transactional(readOnly = true)

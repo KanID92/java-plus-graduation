@@ -18,7 +18,7 @@ spring:
         - id: like_service_internal_route
           uri: lb://like-service
           predicates:
-            - Path=/internal/likes/**
+            - Path=//internal/likes/**
 
         - id: like_service_private_location_route
           uri: lb://like-service
@@ -28,12 +28,7 @@ spring:
         - id: like_service_private_event_route
           uri: lb://like-service
           predicates:
-            - Path=/users/{userId}/events/{eventId}/likes/
-
-        - id: like_service_private_event_like_route
-          uri: lb://like-service
-          predicates:
-            - Path=/events/{eventId}/like
+            - Path=/users/{userId}/events/{eventId}/likes/**
 
         - id: event_service_event_admin_route
           uri: lb://event-service
@@ -65,20 +60,10 @@ spring:
           predicates:
             - Path=/users/{userId}/events/{eventId}
 
-        - id: event_service_event_public_get_by_id_route
+        - id: event_service_event_public_route
           uri: lb://event-service
           predicates:
-            - Path=/events/{id}
-
-        - id: event_service_event_public_get_top_route
-          uri: lb://event-service
-          predicates:
-            - Path=/events/top
-
-        - id: event_service_event_public_get_all_route
-          uri: lb://event-service
-          predicates:
-            - Path=/events
+            - Path=/events/**
 
         - id: event_service_compilation_public_route
           uri: lb://event-service
