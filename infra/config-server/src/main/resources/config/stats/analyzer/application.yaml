@@ -21,8 +21,8 @@ grpc:
   client:
     analyzer:
       address: 'discovery:///analyzer'
-      enableKeepAlive: false
-      keepAliveWithoutCalls: false
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
       negotiationType: plaintext
 
 spring:
@@ -44,3 +44,8 @@ spring:
     init:
       mode: always
 
+logging:
+  level:
+    org:
+      zalando:
+        logbook: TRACE

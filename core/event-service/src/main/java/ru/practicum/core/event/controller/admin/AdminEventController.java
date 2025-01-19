@@ -29,11 +29,8 @@ public class AdminEventController {
     public EventFullDto update(
             @PathVariable long eventId,
             @RequestBody @Valid UpdateEventAdminRequest updateEventAdminRequest) {
-        log.info("==> PATCH /admin/events/{}; Update event by admin: {}", eventId, updateEventAdminRequest);
-        EventFullDto updatedEvent = eventService.update(
+        return eventService.update(
                 eventId, new EventUpdateParams(null, null, updateEventAdminRequest));
-        log.info("<== PATCH /admin/events/{}; Updated event by admin: {}", eventId, updatedEvent);
-        return updatedEvent;
     }
 
     @GetMapping
@@ -46,9 +43,6 @@ public class AdminEventController {
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        log.info("==> GET /admin/events Searching events with params: " +
-                "users {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
-                users, states, categories, rangeStart, rangeEnd, from, size);
         EventSearchParams eventSearchParams = new EventSearchParams();
         AdminSearchParams adminSearchParams = new AdminSearchParams();
         adminSearchParams.setUsers(users);
@@ -59,11 +53,7 @@ public class AdminEventController {
         eventSearchParams.setAdminSearchParams(adminSearchParams);
         eventSearchParams.setFrom(from);
         eventSearchParams.setSize(size);
-        List<EventFullDto> receivedEventSearch = eventService.getAllByAdmin(eventSearchParams);
-        log.info("==> GET /admin/events Searching events with params: " +
-                        "users {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
-                users, states, categories, rangeStart, rangeEnd, from, size);
-        return receivedEventSearch;
+        return eventService.getAllByAdmin(eventSearchParams);
     }
 
 }

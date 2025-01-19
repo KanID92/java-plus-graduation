@@ -106,6 +106,9 @@ server:
 logging:
   level:
     org:
+      zalando:
+        logbook: TRACE
       springframework:
         cloud:
-          gateway: DEBUG
+          gateway: INFO
+

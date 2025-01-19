@@ -5,8 +5,8 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.yandex.practicum.grpc.stats.user.ActionTypeProto;
-import ru.yandex.practicum.grpc.stats.user.UserActionProto;
+import ru.yandex.practicum.grpc.stats.actions.ActionTypeProto;
+import ru.yandex.practicum.grpc.stats.actions.UserActionProto;
 import ru.yandex.practicum.stats.collector.configuration.KafkaUserActionProducer;
 
 import java.time.Instant;

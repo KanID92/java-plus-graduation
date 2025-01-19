@@ -5,9 +5,9 @@ import com.google.protobuf.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.grpc.stats.user.ActionTypeProto;
-import ru.yandex.practicum.grpc.stats.user.UserActionControllerGrpc;
-import ru.yandex.practicum.grpc.stats.user.UserActionProto;
+import ru.yandex.practicum.grpc.stats.actions.ActionTypeProto;
+import ru.yandex.practicum.grpc.stats.actions.UserActionControllerGrpc;
+import ru.yandex.practicum.grpc.stats.actions.UserActionProto;
 
 import java.time.Instant;
 
@@ -18,13 +18,13 @@ public class CollectorClient {
     @GrpcClient("collector")
     private UserActionControllerGrpc.UserActionControllerBlockingStub collectorStub;
 
-    public void sendUserAction(long userId, long eventId, String userAction) {
+    public void sendUserAction(long userId, long eventId, ActionTypeProto userAction) {
         try {
             log.info("Sending userAction. UserId {}, eventId {}, userAction {}", userId, eventId, userAction);
             UserActionProto actionProto = UserActionProto.newBuilder()
                     .setUserId(userId)
                     .setEventId(eventId)
-                    .setActionType(toActionTypeProto(userAction))
+                    .setActionType(userAction)
                     .setTimestamp(Timestamp.newBuilder()
                             .setSeconds(Instant.now().getEpochSecond())
                             .setNanos(Instant.now().getNano())
@@ -37,18 +37,4 @@ public class CollectorClient {
         }
     }
 
-    private ActionTypeProto toActionTypeProto(String actionType) {
-        switch (actionType) {
-            case "VIEW" -> {
-                return ActionTypeProto.ACTION_VIEW;
-            }
-            case "REGISTER" -> {
-                return ActionTypeProto.ACTION_REGISTER;
-            }
-            case "LIKE" -> {
-                return ActionTypeProto.ACTION_LIKE;
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + actionType);
-        }
-    }
 }

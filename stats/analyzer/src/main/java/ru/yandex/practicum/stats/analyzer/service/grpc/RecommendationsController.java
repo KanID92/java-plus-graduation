@@ -6,11 +6,8 @@ import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import ru.yandex.practicum.grpc.stats.recommendations.RecommendationsControllerGrpc;
-import ru.yandex.practicum.grpc.stats.request.InteractionsCountRequestProtoOuterClass;
-import ru.yandex.practicum.grpc.stats.request.RecommendedEventProtoOuterClass;
-import ru.yandex.practicum.grpc.stats.request.SimilarEventsRequestProtoOuterClass;
-import ru.yandex.practicum.grpc.stats.user.UserPredictionsRequestProtoOuterClass;
+import ru.yandex.practicum.grpc.stats.recommendations.proto.RecommendationMessages;
+import ru.yandex.practicum.grpc.stats.recommendations.proto.RecommendationsControllerGrpc;
 import ru.yandex.practicum.stats.analyzer.entity.RecommendedEvent;
 import ru.yandex.practicum.stats.analyzer.service.RecommendationService;
 
@@ -25,16 +22,16 @@ public class RecommendationsController extends RecommendationsControllerGrpc.Rec
 
     @Override
     public void getRecommendationsForUser(
-            UserPredictionsRequestProtoOuterClass.UserPredictionsRequestProto request,
-            StreamObserver<RecommendedEventProtoOuterClass.RecommendedEventProto> responseObserver) {
+            RecommendationMessages.UserPredictionsRequestProto request,
+            StreamObserver<RecommendationMessages.RecommendedEventProto> responseObserver) {
 
         try {
             List<RecommendedEvent> recommendedEventsList =
                     recommendationService.getRecommendedEventsForUser(request.getUserId(), request.getMaxResults());
 
             for (RecommendedEvent recommendedEvent : recommendedEventsList) {
-                RecommendedEventProtoOuterClass.RecommendedEventProto responseProto =
-                        RecommendedEventProtoOuterClass.RecommendedEventProto.newBuilder()
+                RecommendationMessages.RecommendedEventProto responseProto =
+                        RecommendationMessages.RecommendedEventProto.newBuilder()
                                 .setEventId(recommendedEvent.getEventId())
                                 .setScore(recommendedEvent.getScore())
                                 .build();
@@ -55,8 +52,8 @@ public class RecommendationsController extends RecommendationsControllerGrpc.Rec
 
     @Override
     public void getSimilarEvents(
-            SimilarEventsRequestProtoOuterClass.SimilarEventsRequestProto similarEventsRequestProto,
-            StreamObserver<RecommendedEventProtoOuterClass.RecommendedEventProto> responseObserver
+            RecommendationMessages.SimilarEventsRequestProto similarEventsRequestProto,
+            StreamObserver<RecommendationMessages.RecommendedEventProto> responseObserver
     ) {
         try {
             List<RecommendedEvent> recommendedEventList =
@@ -66,8 +63,8 @@ public class RecommendationsController extends RecommendationsControllerGrpc.Rec
                             similarEventsRequestProto.getMaxResults());
 
             for (RecommendedEvent recommendedEvent : recommendedEventList) {
-                RecommendedEventProtoOuterClass.RecommendedEventProto responseProto =
-                        RecommendedEventProtoOuterClass.RecommendedEventProto.newBuilder()
+                RecommendationMessages.RecommendedEventProto responseProto =
+                        RecommendationMessages.RecommendedEventProto.newBuilder()
                                 .setEventId(recommendedEvent.getEventId())
                                 .setScore(recommendedEvent.getScore())
                                 .build();
@@ -87,15 +84,15 @@ public class RecommendationsController extends RecommendationsControllerGrpc.Rec
 
     @Override
     public void getInteractionsCount(
-            InteractionsCountRequestProtoOuterClass.InteractionsCountRequestProto interactionsCountRequestProto,
-            StreamObserver<RecommendedEventProtoOuterClass.RecommendedEventProto> responseObserver
+            RecommendationMessages.InteractionsCountRequestProto interactionsCountRequestProto,
+            StreamObserver<RecommendationMessages.RecommendedEventProto> responseObserver
     ) {
         try {
             List<RecommendedEvent> recommendedEventList =
                     recommendationService.getInteractionsCount(interactionsCountRequestProto.getEventIdList());
             for (RecommendedEvent recommendedEvent : recommendedEventList) {
-                RecommendedEventProtoOuterClass.RecommendedEventProto responseProto =
-                        RecommendedEventProtoOuterClass.RecommendedEventProto.newBuilder()
+                RecommendationMessages.RecommendedEventProto responseProto =
+                        RecommendationMessages.RecommendedEventProto.newBuilder()
                                 .setEventId(recommendedEvent.getEventId())
                                 .setScore(recommendedEvent.getScore())
                                 .build();

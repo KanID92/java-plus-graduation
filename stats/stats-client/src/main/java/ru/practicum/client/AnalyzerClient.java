@@ -2,12 +2,9 @@ package ru.practicum.client;
 
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import org.springframework.stereotype.Component;
-import ru.yandex.practicum.grpc.stats.recommendations.RecommendationsControllerGrpc;
-import ru.yandex.practicum.grpc.stats.request.InteractionsCountRequestProtoOuterClass;
-import ru.yandex.practicum.grpc.stats.request.RecommendedEventProtoOuterClass;
-import ru.yandex.practicum.grpc.stats.request.SimilarEventsRequestProtoOuterClass;
-import ru.yandex.practicum.grpc.stats.user.UserPredictionsRequestProtoOuterClass;
+import org.springframework.stereotype.Service;
+import ru.yandex.practicum.grpc.stats.recommendations.proto.RecommendationMessages;
+import ru.yandex.practicum.grpc.stats.recommendations.proto.RecommendationsControllerGrpc;
 
 import java.util.Iterator;
 import java.util.List;
@@ -17,24 +14,24 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Slf4j
-@Component
+@Service
 public class AnalyzerClient {
 
     @GrpcClient("analyzer")
     private RecommendationsControllerGrpc.RecommendationsControllerBlockingStub analyzerStub;
 
-    public Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> getRecommendedEventsForUser(
+    public Stream<RecommendationMessages.RecommendedEventProto> getRecommendedEventsForUser(
             long userId, int size) {
         try {
             log.info("AnalyzerClient. Getting recommendation. UserId: {}, size: {}", userId, size);
-            UserPredictionsRequestProtoOuterClass.UserPredictionsRequestProto predictionsRequestProto =
-                    UserPredictionsRequestProtoOuterClass.UserPredictionsRequestProto.newBuilder()
+            RecommendationMessages.UserPredictionsRequestProto predictionsRequestProto =
+                    RecommendationMessages.UserPredictionsRequestProto.newBuilder()
                             .setUserId(userId)
                             .setMaxResults(size)
                             .build();
-            Iterator<RecommendedEventProtoOuterClass.RecommendedEventProto> responseIterator =
+            Iterator<RecommendationMessages.RecommendedEventProto> responseIterator =
                     analyzerStub.getRecommendationsForUser(predictionsRequestProto);
-            Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> result = asStream(responseIterator);
+            Stream<RecommendationMessages.RecommendedEventProto> result = asStream(responseIterator);
             log.info("Recommendations get: {}", result);
             return result;
         } catch (Exception e) {
@@ -43,13 +40,13 @@ public class AnalyzerClient {
         }
     }
 
-    public Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> getSimilarEvent(
-            SimilarEventsRequestProtoOuterClass.SimilarEventsRequestProto similarEventsRequestProto) {
+    public Stream<RecommendationMessages.RecommendedEventProto> getSimilarEvent(
+            RecommendationMessages.SimilarEventsRequestProto similarEventsRequestProto) {
         try {
             log.info("AnalyzerClient. Getting similarEvents: {}", similarEventsRequestProto);
-            Iterator<RecommendedEventProtoOuterClass.RecommendedEventProto> responseIterator =
+            Iterator<RecommendationMessages.RecommendedEventProto> responseIterator =
                     analyzerStub.getSimilarEvents(similarEventsRequestProto);
-            Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> result = asStream(responseIterator);
+            Stream<RecommendationMessages.RecommendedEventProto> result = asStream(responseIterator);
             log.info("SimilarEvents get: {}", result);
             return result;
         } catch (Exception e) {
@@ -58,19 +55,19 @@ public class AnalyzerClient {
         }
     }
 
-    public Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> getInteractionsCount(
+    public Stream<RecommendationMessages.RecommendedEventProto> getInteractionsCount(
             List<Long> interactionsCountList) {
         try {
             log.info("AnalyzerClient. Getting InteractionsCount: {}", interactionsCountList);
 
-            InteractionsCountRequestProtoOuterClass.InteractionsCountRequestProto.Builder builder =
-                     InteractionsCountRequestProtoOuterClass.InteractionsCountRequestProto.newBuilder();
+            RecommendationMessages.InteractionsCountRequestProto.Builder builder =
+                     RecommendationMessages.InteractionsCountRequestProto.newBuilder();
 
             interactionsCountList.forEach(builder::addEventId);
 
-            Iterator<RecommendedEventProtoOuterClass.RecommendedEventProto> responseIterator =
+            Iterator<RecommendationMessages.RecommendedEventProto> responseIterator =
                     analyzerStub.getInteractionsCount(builder.build());
-            Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> result = asStream(responseIterator);
+            Stream<RecommendationMessages.RecommendedEventProto> result = asStream(responseIterator);
             log.info("InteractionsCount get: {}", result);
             return result;
         } catch (Exception e) {
@@ -79,8 +76,8 @@ public class AnalyzerClient {
         }
     }
 
-    private Stream<RecommendedEventProtoOuterClass.RecommendedEventProto> asStream(
-            Iterator<RecommendedEventProtoOuterClass.RecommendedEventProto> iterator) {
+    private Stream<RecommendationMessages.RecommendedEventProto> asStream(
+            Iterator<RecommendationMessages.RecommendedEventProto> iterator) {
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED),
                 false

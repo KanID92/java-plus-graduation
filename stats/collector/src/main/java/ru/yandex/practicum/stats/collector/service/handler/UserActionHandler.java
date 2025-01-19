@@ -1,6 +1,6 @@
 package ru.yandex.practicum.stats.collector.service.handler;
 
-import ru.yandex.practicum.grpc.stats.user.UserActionProto;
+import ru.yandex.practicum.grpc.stats.actions.UserActionProto;
 
 public interface UserActionHandler {
 

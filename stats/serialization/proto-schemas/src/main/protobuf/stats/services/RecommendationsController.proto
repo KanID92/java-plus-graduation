@@ -1,11 +1,8 @@
 syntax = "proto3";
 
-import "stats/messages/UserPredictionsRequestProto.proto";
-import "stats/messages/RecommendedEventProto.proto";
-import "stats/messages/SimilarEventsRequestProto.proto";
-import "stats/messages/InteractionsCountRequestProto.proto";
+import "stats/messages/RecommendationMessages.proto";
 
-option java_package = "ru.yandex.practicum.grpc.stats.recommendations";
+option java_package = "ru.yandex.practicum.grpc.stats.recommendations.proto";
 
 service RecommendationsController {
 

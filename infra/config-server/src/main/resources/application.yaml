@@ -24,3 +24,5 @@ eureka:
 
 server:
   port: 0
+
+

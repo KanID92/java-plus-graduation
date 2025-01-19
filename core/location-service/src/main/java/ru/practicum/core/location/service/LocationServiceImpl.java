@@ -1,6 +1,7 @@
 package ru.practicum.core.location.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.core.api.client.LikeServiceClient;
 import ru.practicum.core.api.client.UserServiceClient;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocationServiceImpl implements LocationService {
@@ -27,8 +29,18 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public List<LocationDto> getTop(long userId, Integer count) {
+        log.info("CALL. userServiceClient.checkExistence(userId) " +
+                " userId {}, ", userId);
         userServiceClient.checkExistence(userId);
+        log.info("FINISHED. userServiceClient.checkExistence(userId) " +
+                " userId {}, ", userId);
+
+        log.info("CALL. likeServiceClient.getTopLikedLocationsIds(count) " +
+                " count {}, ", count);
         Map<Long, Long> topLocationIds = likeServiceClient.getTopLikedLocationsIds(count);
+        log.info("FINISHED. likeServiceClient.getTopLikedLocationsIds(count) " +
+                " count {}, ", count);
+        log.debug("RESULT. likeServiceClient.getTopLikedLocationsIds(count)): {{}}", topLocationIds);
 
         List<Location> locationTopList = locationRepository.findAllById(topLocationIds.keySet());
 

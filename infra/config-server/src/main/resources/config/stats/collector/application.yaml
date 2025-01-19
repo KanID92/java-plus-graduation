@@ -17,3 +17,10 @@ grpc:
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: plaintext
+
+
+logging:
+  level:
+    org:
+      zalando:
+        logbook: TRACE

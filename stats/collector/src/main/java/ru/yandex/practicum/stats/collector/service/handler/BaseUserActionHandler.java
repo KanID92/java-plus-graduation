@@ -3,7 +3,7 @@ package ru.yandex.practicum.stats.collector.service.handler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import ru.yandex.practicum.grpc.stats.user.UserActionProto;
+import ru.yandex.practicum.grpc.stats.actions.UserActionProto;
 import ru.yandex.practicum.stats.collector.configuration.KafkaUserActionProducer;
 
 @Slf4j

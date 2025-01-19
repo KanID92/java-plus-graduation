@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-option java_package = "ru.yandex.practicum.grpc.stats.request";
-
-message RecommendedEventProto {
-  int64 event_id = 1;
-  double score = 2;
-}
