@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "3b1dbfa4-8bba-4a55-9d92-0d7ea11b5a00",
-		"name": "Test Explore With Me - feature likes_rating",
+		"_postman_id": "535a7815-267a-42b0-ad32-c6d19abb4785",
+		"name": "Test Explore With Me - feature likes_rating Copy",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "34578450"
 	},
@@ -1386,7 +1386,8 @@
 													"    100 \r",
 													");"
 												],
-												"type": "text/javascript"
+												"type": "text/javascript",
+												"packages": {}
 											}
 										},
 										{
@@ -1400,7 +1401,8 @@
 													"});\r",
 													""
 												],
-												"type": "text/javascript"
+												"type": "text/javascript",
+												"packages": {}
 											}
 										}
 									],
@@ -1410,6 +1412,11 @@
 											{
 												"key": "Accept",
 												"value": "application/json"
+											},
+											{
+												"key": "X-EWM-USER-ID",
+												"value": "1",
+												"type": "text"
 											}
 										],
 										"url": {
@@ -1510,7 +1517,6 @@
 													"pm.expect(target).to.have.property('paid');\r",
 													"pm.expect(target).to.have.property('eventDate');\r",
 													"pm.expect(target).to.have.property('initiator');\r",
-													"pm.expect(target).to.have.property('views');\r",
 													"pm.expect(target).to.have.property('confirmedRequests');\r",
 													"pm.expect(target).to.have.property('description');\r",
 													"pm.expect(target).to.have.property('participantLimit');\r",
@@ -1712,119 +1718,6 @@
 											]
 										},
 										"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
-									},
-									"response": []
-								},
-								{
-									"name": "Проверка работы поля views",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													"const main = async () => {\r",
-													"    const api = new API(pm);\r",
-													"    const rnd = new RandomUtils();\r",
-													"\r",
-													"    try {\r",
-													"        const user = await api.addUser(rnd.getUser());\r",
-													"        const category = await api.addCategory(rnd.getCategory());\r",
-													"        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
-													"        event = await api.publishEvent(event.id);\r",
-													"        await api.findEvent(event.id)\r",
-													"        await api.findEvent(event.id)\r",
-													"        pm.collectionVariables.set(\"eid\", event.id)\r",
-													"    } catch(err) {\r",
-													"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-													"    }\r",
-													"};\r",
-													"\r",
-													"const interval = setInterval(() => {}, 1000);\r",
-													"\r",
-													"setTimeout(async () => \r",
-													"    {\r",
-													"        try {\r",
-													"            // выполняем наш скрипт\r",
-													"            await main();\r",
-													"        } catch (e) {\r",
-													"            console.error(e);\r",
-													"        } finally {\r",
-													"            clearInterval(interval);\r",
-													"        }\r",
-													"    },  \r",
-													"    100 \r",
-													");"
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
-													"    pm.response.to.be.ok;    \r",
-													"    pm.response.to.be.withBody;\r",
-													"    pm.response.to.be.json;\r",
-													"});\r",
-													"\r",
-													"\r",
-													"const target = pm.response.json();\r",
-													"\r",
-													"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests, description, participantLimit, state, createdOn, publishedOn, location, requestModeration\", function () {\r",
-													"pm.expect(target).to.have.property('id');\r",
-													"pm.expect(target).to.have.property('title');\r",
-													"pm.expect(target).to.have.property('annotation');\r",
-													"pm.expect(target).to.have.property('category');\r",
-													"pm.expect(target).to.have.property('paid');\r",
-													"pm.expect(target).to.have.property('eventDate');\r",
-													"pm.expect(target).to.have.property('initiator');\r",
-													"pm.expect(target).to.have.property('views');\r",
-													"pm.expect(target).to.have.property('confirmedRequests');\r",
-													"pm.expect(target).to.have.property('description');\r",
-													"pm.expect(target).to.have.property('participantLimit');\r",
-													"pm.expect(target).to.have.property('state');\r",
-													"pm.expect(target).to.have.property('createdOn');\r",
-													"pm.expect(target).to.have.property('publishedOn');\r",
-													"pm.expect(target).to.have.property('location');\r",
-													"pm.expect(target).to.have.property('requestModeration');\r",
-													"});\r",
-													"\r",
-													"pm.test(\"Значение поля views должно увеличится на 1 после выполнения GET запроса с уникального IP к событию\", function () {\r",
-													"    pm.expect(target.views).equal(1);\r",
-													"    \r",
-													"});"
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Accept",
-												"value": "application/json"
-											}
-										],
-										"url": {
-											"raw": "{{baseUrl}}/events/:id",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"events",
-												":id"
-											],
-											"variable": [
-												{
-													"key": "id",
-													"value": "{{eid}}",
-													"description": "(Required) id события"
-												}
-											]
-										},
-										"description": "Обратите внимание:\n- событие должно быть опубликовано\n- информация о событии должна включать в себя количество просмотров и количество подтвержденных запросов\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
 									},
 									"response": []
 								},
@@ -5734,7 +5627,6 @@
 									"pm.expect(target).to.have.property('paid');\r",
 									"pm.expect(target).to.have.property('eventDate');\r",
 									"pm.expect(target).to.have.property('initiator');\r",
-									"pm.expect(target).to.have.property('views');\r",
 									"pm.expect(target).to.have.property('confirmedRequests');\r",
 									"pm.expect(target).to.have.property('description');\r",
 									"pm.expect(target).to.have.property('participantLimit');\r",
@@ -6141,7 +6033,6 @@
 									"pm.expect(target).to.have.property('paid');\r",
 									"pm.expect(target).to.have.property('eventDate');\r",
 									"pm.expect(target).to.have.property('initiator');\r",
-									"pm.expect(target).to.have.property('views');\r",
 									"pm.expect(target).to.have.property('confirmedRequests');\r",
 									"pm.expect(target).to.have.property('description');\r",
 									"pm.expect(target).to.have.property('participantLimit');\r",
@@ -6174,6 +6065,11 @@
 							{
 								"key": "Accept",
 								"value": "application/json"
+							},
+							{
+								"key": "X-EWM-USER-ID",
+								"value": "1",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -6386,27 +6282,6 @@
 									"    pm.response.to.be.json;\r",
 									"});\r",
 									"\r",
-									"const source = pm.collectionVariables.get('response');\r",
-									"const target = pm.response.json()[0];\r",
-									"\r",
-									"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, description, participantLimit, state, createdOn, location, requestModeration, likesCount\", function () {\r",
-									"pm.expect(target).to.have.property('id');\r",
-									"pm.expect(target).to.have.property('title');\r",
-									"pm.expect(target).to.have.property('annotation');\r",
-									"pm.expect(target).to.have.property('category');\r",
-									"pm.expect(target).to.have.property('paid');\r",
-									"pm.expect(target).to.have.property('eventDate');\r",
-									"pm.expect(target).to.have.property('initiator');\r",
-									"pm.expect(target).to.have.property('description');\r",
-									"pm.expect(target).to.have.property('location');\r",
-									"pm.expect(target).to.have.property('views');\r",
-									"pm.expect(target).to.have.property('likesCount');\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Количество лайков у топ 1 событий не должно быть равно 0\", function () {\r",
-									"    pm.expect(target.likesCount).to.not.be.null;\r",
-									"});\r",
-									"\r",
 									"\r",
 									""
 								],
@@ -6441,339 +6316,6 @@
 							]
 						},
 						"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
-					},
-					"response": []
-				},
-				{
-					"name": "Получение топ событий по количеству просмотров",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"const main = async () => {\r",
-									"    const api = new API(pm);\r",
-									"    const rnd = new RandomUtils();\r",
-									"\r",
-									"    try {\r",
-									"        const user = await api.addUser(rnd.getUser());\r",
-									"        const user2 = await api.addUser(rnd.getUser());\r",
-									"        const user3 = await api.addUser(rnd.getUser());\r",
-									"        const user4 = await api.addUser(rnd.getUser());\r",
-									"        const category = await api.addCategory(rnd.getCategory());\r",
-									"        let event1 = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
-									"        event1 = await api.publishEvent(event1.id);\r",
-									"        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
-									"        pm.request.addQueryParams([`text=` + event1.annotation, 'categories=' + category.id, 'paid=' + event1.paid]);\r",
-									"        pm.collectionVariables.set('response', event1);\r",
-									"        let event2 = await api.addEvent(user2.id, rnd.getEvent(category.id));\r",
-									"        event2 = await api.publishEvent(event2.id);\r",
-									"        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
-									"        pm.request.addQueryParams([`text=` + event2.annotation, 'categories=' + category.id, 'paid=' + event2.paid]);\r",
-									"        pm.collectionVariables.set('response', event2);\r",
-									"        let event3 = await api.addEvent(user2.id, rnd.getEvent(category.id));\r",
-									"        event3 = await api.publishEvent(event3.id);\r",
-									"        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
-									"        pm.request.addQueryParams([`text=` + event3.annotation, 'categories=' + category.id, 'paid=' + event3.paid]);\r",
-									"        pm.collectionVariables.set('response', event3);\r",
-									"\r",
-									"        await api.findEvent(event2.id, null);\r",
-									"        await api.findEvent(event2.id, null);\r",
-									"        await api.findEvent(event1.id, null);\r",
-									"        await api.findEvent(event1.id, null);\r",
-									"        await api.findEvent(event1.id, null);\r",
-									"        await api.findEvent(event3.id, null);\r",
-									"        \r",
-									"    } catch(err) {\r",
-									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-									"    }\r",
-									"};\r",
-									"\r",
-									"const interval = setInterval(() => {}, 1000);\r",
-									"\r",
-									"setTimeout(async () => \r",
-									"    {\r",
-									"        try {\r",
-									"            // выполняем наш скрипт\r",
-									"            await main();\r",
-									"        } catch (e) {\r",
-									"            console.error(e);\r",
-									"        } finally {\r",
-									"            clearInterval(interval);\r",
-									"        }\r",
-									"    },  \r",
-									"    100 \r",
-									");"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
-									"    pm.response.to.be.ok;    \r",
-									"    pm.response.to.be.withBody;\r",
-									"    pm.response.to.be.json;\r",
-									"});\r",
-									"\r",
-									"const source = pm.collectionVariables.get('response');\r",
-									"const target = pm.response.json()[0];\r",
-									"\r",
-									"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, description, participantLimit, state, createdOn, location, requestModeration, likesCount\", function () {\r",
-									"pm.expect(target).to.have.property('id');\r",
-									"pm.expect(target).to.have.property('title');\r",
-									"pm.expect(target).to.have.property('annotation');\r",
-									"pm.expect(target).to.have.property('category');\r",
-									"pm.expect(target).to.have.property('paid');\r",
-									"pm.expect(target).to.have.property('eventDate');\r",
-									"pm.expect(target).to.have.property('initiator');\r",
-									"pm.expect(target).to.have.property('description');\r",
-									"pm.expect(target).to.have.property('location');\r",
-									"pm.expect(target).to.have.property('views');\r",
-									"pm.expect(target).to.have.property('likesCount');\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Количество просмотров у топ 1 событий не должно быть равно 0\", function () {\r",
-									"    pm.expect(target.views).to.not.be.null;\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Количество просмотров у событий не должно быть равно 0\", function () {\r",
-									"    pm.expect(target.views).to.not.be.null;\r",
-									"});\r",
-									"\r",
-									"\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/events/top-view?count=5",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"events",
-								"top-view"
-							],
-							"query": [
-								{
-									"key": "count",
-									"value": "5",
-									"description": "количество топ событий в наборе"
-								}
-							]
-						},
-						"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
-					},
-					"response": []
-				},
-				{
-					"name": "Добавление лайка событию",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
-									"    pm.response.to.be.ok;    \r",
-									"    pm.response.to.be.withBody;\r",
-									"    pm.response.to.be.json;\r",
-									"});\r",
-									"\r",
-									"const target = pm.response.json();\r",
-									"\r",
-									"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
-									"    pm.expect(target.id).to.not.be.null;\r",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"const main = async () => {\r",
-									"    const api = new API(pm);\r",
-									"    const rnd = new RandomUtils();\r",
-									"\r",
-									"    try {\r",
-									"        const user = await api.addUser(rnd.getUser());\r",
-									"        pm.collectionVariables.set(\"uid\", user.id)\r",
-									"        const category = await api.addCategory(rnd.getCategory());\r",
-									"        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
-									"        event = await api.publishEvent(event.id);\r",
-									"        pm.collectionVariables.set(\"eid\", event.id)\r",
-									"        pm.collectionVariables.set('response', event);\r",
-									"    } catch(err) {\r",
-									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-									"    }\r",
-									"};\r",
-									"\r",
-									"const interval = setInterval(() => {}, 1000);\r",
-									"\r",
-									"setTimeout(async () => \r",
-									"    {\r",
-									"        try {\r",
-									"            await main();\r",
-									"        } catch (e) {\r",
-									"            console.error(e);\r",
-									"        } finally {\r",
-									"            clearInterval(interval);\r",
-									"        }\r",
-									"    },  \r",
-									"    100 \r",
-									");"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/events/:eventId/likes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"events",
-								":eventId",
-								"likes"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{uid}}",
-									"description": "(Required) id текущего пользователя"
-								},
-								{
-									"key": "eventId",
-									"value": "{{eid}}",
-									"description": "(Required) id события"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Удаление лайка событию",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"const main = async () => {\r",
-									"    const api = new API(pm);\r",
-									"    const rnd = new RandomUtils();\r",
-									"\r",
-									"    try {\r",
-									"        const user = await api.addUser(rnd.getUser());\r",
-									"        pm.collectionVariables.set(\"uid\", user.id)\r",
-									"        const category = await api.addCategory(rnd.getCategory());\r",
-									"        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
-									"        event = await api.publishEvent(event.id);\r",
-									"        await api.addLike(user.id, event.id, null)\r",
-									"        pm.collectionVariables.set(\"eid\", event.id)\r",
-									"        pm.collectionVariables.set('response', event);\r",
-									"    } catch(err) {\r",
-									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-									"    }\r",
-									"};\r",
-									"\r",
-									"const interval = setInterval(() => {}, 1000);\r",
-									"\r",
-									"setTimeout(async () => \r",
-									"    {\r",
-									"        try {\r",
-									"            await main();\r",
-									"        } catch (e) {\r",
-									"            console.error(e);\r",
-									"        } finally {\r",
-									"            clearInterval(interval);\r",
-									"        }\r",
-									"    },  \r",
-									"    100 \r",
-									");"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
-									"    pm.response.to.be.ok;    \r",
-									"});\r",
-									"\r",
-									"\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/users/:userId/events/:eventId/likes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								":userId",
-								"events",
-								":eventId",
-								"likes"
-							],
-							"variable": [
-								{
-									"key": "userId",
-									"value": "{{uid}}",
-									"description": "(Required) id текущего пользователя"
-								},
-								{
-									"key": "eventId",
-									"value": "{{eid}}",
-									"description": "(Required) id события"
-								}
-							]
-						}
 					},
 					"response": []
 				}

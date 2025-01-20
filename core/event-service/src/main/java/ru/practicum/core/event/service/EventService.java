@@ -1,6 +1,5 @@
 package ru.practicum.core.event.service;
 
-import ru.practicum.HitDto;
 import ru.practicum.core.api.dto.event.EventFullDto;
 import ru.practicum.core.api.dto.event.EventShortDto;
 import ru.practicum.core.api.dto.event.NewEventDto;
@@ -14,7 +13,7 @@ public interface EventService {
 
     EventFullDto create(long userId, NewEventDto newEventDto);
 
-    EventFullDto getById(EventGetByIdParams params, HitDto hitDto);
+    EventFullDto getById(EventGetByIdParams params);
 
     EventFullDto update(long eventId, EventUpdateParams updateParams);
 
@@ -22,11 +21,11 @@ public interface EventService {
 
     List<EventShortDto> getAllByInitiator(EventSearchParams searchParams);
 
-    List<EventShortDto> getAllByPublic(EventSearchParams searchParams, HitDto hitDto);
+    List<EventShortDto> getAllByPublic(EventSearchParams searchParams);
 
-    List<EventShortDto> getTopEvent(Integer count, HitDto hitDto);
-
-    List<EventShortDto> getTopViewEvent(Integer count, HitDto hitDto);
+    List<EventShortDto> getTopEvent(Integer count);
 
     EventFullDto getByIdInternal(long eventId);
+
+    Long addEventLike(long userId, long eventId);
 }

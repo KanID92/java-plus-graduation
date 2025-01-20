@@ -1,15 +1,13 @@
 package ru.practicum.core.event.controller.publ;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.HitDto;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.core.api.constant.Constants;
 import ru.practicum.core.api.dto.event.EventFullDto;
 import ru.practicum.core.api.dto.event.EventShortDto;
+import ru.practicum.core.api.dto.recommendation.RecommendationDto;
 import ru.practicum.core.api.enums.EventState;
 import ru.practicum.core.api.exception.IncorrectValueException;
 import ru.practicum.core.api.exception.NotFoundException;
@@ -17,20 +15,34 @@ import ru.practicum.core.event.controller.params.EventGetByIdParams;
 import ru.practicum.core.event.controller.params.search.EventSearchParams;
 import ru.practicum.core.event.controller.params.search.PublicSearchParams;
 import ru.practicum.core.event.service.EventService;
+import ru.practicum.core.event.service.RecommendationService;
+import ru.yandex.practicum.grpc.stats.actions.ActionTypeProto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-@Slf4j
+
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
 public class PublicEventController {
 
     private final EventService eventService;
+    private final CollectorClient collectorClient;
+    private final RecommendationService recommendationService;
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(Constants.JSON_TIME_FORMAT);
 
+    @GetMapping("/recommendations")
+    public List<RecommendationDto> getRecommendations(
+            @RequestHeader("X-EWM-USER-ID") long userId, @RequestParam(name = "size", defaultValue = "10") int size) {
+        return recommendationService.getRecommendations(userId, size);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public Long addEventLike(@RequestHeader("X-EWM-USER-ID") long userId, @PathVariable long eventId) {
+        return eventService.addEventLike(eventId, userId);
+    }
 
     @GetMapping
     public List<EventShortDto> getAll(
@@ -41,11 +53,7 @@ public class PublicEventController {
             @RequestParam(required = false) @DateTimeFormat(pattern = Constants.JSON_TIME_FORMAT) LocalDateTime rangeEnd,
             @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false, defaultValue = "0") Integer from,
-            @RequestParam(required = false, defaultValue = "10") Integer size,
-            HttpServletRequest httpRequest) {
-        log.info("==> GET /events Public searching events with params: " +
-                        "text {}, categories: {}, paid {}, rangeStart: {}, rangeEnd: {}, available {}, from: {}, size: {}",
-                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, from, size);
+            @RequestParam(required = false, defaultValue = "10") Integer size) {
 
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IncorrectValueException("rangeStart of event can't be after rangeEnd");
@@ -64,72 +72,24 @@ public class PublicEventController {
         eventSearchParams.setFrom(from);
         eventSearchParams.setSize(size);
 
-        HitDto hitDto = new HitDto(
-                null,
-                "ewm-service",
-                httpRequest.getRequestURI(),
-                httpRequest.getRemoteAddr(),
-                LocalDateTime.now().format(dateTimeFormatter));
-
-        List<EventShortDto> eventShortDtoList = eventService.getAllByPublic(eventSearchParams, hitDto);
-        log.info("<== GET /events Returning public searching events. List size: {}",
-                eventShortDtoList.size());
-        return eventShortDtoList;
+        return eventService.getAllByPublic(eventSearchParams);
     }
 
     @GetMapping("/top")
     public List<EventShortDto> getTop(
-            @RequestParam(required = false, defaultValue = "10") Integer count,
-            HttpServletRequest httpRequest) {
-        log.info("==> GET /events/top");
+            @RequestParam(required = false, defaultValue = "10") Integer count) {
 
-        HitDto hitDto = new HitDto(
-                null,
-                "ewm-service",
-                httpRequest.getRequestURI(),
-                httpRequest.getRemoteAddr(),
-                LocalDateTime.now().format(dateTimeFormatter));
-
-        List<EventShortDto> eventShortDtoList = eventService.getTopEvent(count, hitDto);
-        log.info("<== GET /events Returning top {} events.", count);
-        return eventShortDtoList;
-    }
-
-    @GetMapping("/top-view")
-    public List<EventShortDto> getTopView(
-            @RequestParam(required = false, defaultValue = "10") Integer count,
-            HttpServletRequest httpRequest) {
-        log.info("==> GET /events/top-view");
-
-        HitDto hitDto = new HitDto(
-                null,
-                "ewm-service",
-                httpRequest.getRequestURI(),
-                httpRequest.getRemoteAddr(),
-                LocalDateTime.now().format(dateTimeFormatter));
-
-        List<EventShortDto> eventShortDtoList = eventService.getTopViewEvent(count, hitDto);
-        log.info("<== GET /events Returning top view {} events.", count);
-        return eventShortDtoList;
+        return eventService.getTopEvent(count);
     }
 
     @GetMapping("/{id}")
-    @Transactional
     public EventFullDto getById(
-            @PathVariable Long id, HttpServletRequest httpRequest
-    ) {
-        log.info("==> GET /events/{}  Public getById", id);
-        HitDto hitDto = new HitDto(
-                null,
-                "ewm-service",
-                httpRequest.getRequestURI(),
-                httpRequest.getRemoteAddr(),
-                LocalDateTime.now().format(dateTimeFormatter));
-        EventFullDto eventFullDto = eventService.getById(new EventGetByIdParams(null, id), hitDto);
+            @PathVariable Long id, @RequestHeader("X-EWM-USER-ID") long userId) {
+        EventFullDto eventFullDto = eventService.getById(new EventGetByIdParams(null, id));
         if (eventFullDto.state() != EventState.PUBLISHED) {
             throw new NotFoundException("Нет опубликованных событий с id " + id);
         }
-        log.info("<== GET /events/{}  Public getById", id);
+        collectorClient.sendUserAction(userId, id, ActionTypeProto.ACTION_VIEW);
         return eventFullDto;
     }
 }

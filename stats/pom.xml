@@ -17,8 +17,10 @@
 
     <modules>
         <module>stats-client</module>
-        <module>stats-dto</module>
-        <module>stats-server</module>
+        <module>collector</module>
+        <module>aggregator</module>
+        <module>serialization</module>
+        <module>analyzer</module>
     </modules>
 
     <properties>
@@ -27,5 +29,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+
+    <dependencies>
+        <dependency>
+            <groupId>org.zalando</groupId>
+            <artifactId>logbook-spring-boot-starter</artifactId>
+            <version>3.10.0</version>
+        </dependency>
+    </dependencies>
 
 </project>

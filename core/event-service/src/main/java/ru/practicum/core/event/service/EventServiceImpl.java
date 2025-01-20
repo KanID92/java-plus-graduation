@@ -7,9 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.HitDto;
-import ru.practicum.HitStatDto;
-import ru.practicum.client.StatClient;
+import ru.practicum.client.AnalyzerClient;
 import ru.practicum.core.api.client.LikeServiceClient;
 import ru.practicum.core.api.client.LocationServiceClient;
 import ru.practicum.core.api.client.RequestServiceClient;
@@ -36,11 +34,14 @@ import ru.practicum.core.event.entity.Event;
 import ru.practicum.core.event.mapper.EventMapper;
 import ru.practicum.core.event.repository.CategoryRepository;
 import ru.practicum.core.event.repository.EventRepository;
+import ru.yandex.practicum.grpc.stats.recommendations.proto.RecommendationMessages;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import static ru.practicum.core.event.entity.QEvent.event;
 
@@ -57,16 +58,24 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestServiceClient requestServiceClient;
 
-    private final StatClient statClient;
+    private final AnalyzerClient analyzerClient;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(Constants.JSON_TIME_FORMAT);
 
     @Override
     public EventFullDto create(long userId, NewEventDto newEventDto) {
+        log.info("call userServiceClient.getById: userId = {}", userId);
         UserDto savedUser = userServiceClient.getById(userId);
+        log.info("userServiceClient.getById(userId) finished: userId = {}", userId);
+        log.debug("result {{}}", savedUser);
         Category category = categoryRepository.findById(newEventDto.category())
                 .orElseThrow(() -> new NotFoundException("Category with id " + newEventDto.category() + " not found"));
+
+        log.info("locationServiceClient.create(userId, newEventDto.location(): userId = {}, newEventDto = {}",
+                newEventDto, userId);
         LocationDto locationDto = locationServiceClient.create(userId, newEventDto.location());
+        log.info("userServiceClient.getById(userId) finished: userId = {}", userId);
+        log.debug("result {{}}", locationDto);
         Event event = eventMapper.newEventDtoToEvent(
                 newEventDto, savedUser.id(), category, locationDto.id(), LocalDateTime.now());
         Event savedEvent = eventRepository.save(event);
@@ -76,20 +85,42 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public Long addEventLike(long userId, long eventId) {
+        log.info("likeServiceClient.addEventLike(userId, eventId): userId = {}, eventId = {}",
+                userId, eventId);
+        long eventLikeCount = likeServiceClient.addEventLike(userId, eventId);
+        log.info("likeServiceClient.addEventLike(userId, eventId) finished: userId = {}, eventId = {}",
+                userId, eventId);
+        log.debug("result of likeServiceClient.addEventLike {{}}", eventLikeCount);
+        return eventLikeCount;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getAllByInitiator(EventSearchParams searchParams) {
 
         long initiatorId = searchParams.getPrivateSearchParams().getInitiatorId();
 
+        log.info("call userServiceClient.getById: initiatorId = {}", initiatorId);
         UserDto userDto = userServiceClient.getById(initiatorId);
+        log.info("userServiceClient.getById(userId) finished: initiatorId = {}", initiatorId);
+        log.debug("result of userServiceClient.getById {{}}", userDto);
         Pageable page = PageRequest.of(searchParams.getFrom(), searchParams.getSize());
         List<Event> receivedEvents = eventRepository.findAllByInitiatorId(initiatorId, page);
 
         List<Long> eventIds = receivedEvents.stream().map(Event::getId).toList();
+
+        log.info("call likeServiceClient.getAllEventsLikesByIds: eventIds = {}", eventIds);
         Map<Long, Long> likesEventMap = likeServiceClient.getAllEventsLikesByIds(eventIds);
+        log.info("likeServiceClient.getAllEventsLikesByIds finished: eventIds = {}", eventIds);
+        log.debug("result of likeServiceClient.getAllEventsLikesByIds {{}}", likesEventMap);
 
         List<Long> locationIds = receivedEvents.stream().map(Event::getLocationId).toList();
+
+        log.info("call locationServiceClient.getAllById(locationIds): locationIds = {}", locationIds);
         Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+        log.info("locationServiceClient.getAllById(locationIds) finished: locationIds = {}", locationIds);
+        log.debug("result of locationServiceClient.getAllById(locationIds) {{}}", locationDtoMap);
 
         for (Event event : receivedEvents) {
             event.setLikes(likesEventMap.get(event.getId()));
@@ -104,7 +135,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EventShortDto> getAllByPublic(EventSearchParams searchParams, HitDto hitDto) {
+    public List<EventShortDto> getAllByPublic(EventSearchParams searchParams) {
 
         Pageable page = PageRequest.of(searchParams.getFrom(), searchParams.getSize());
 
@@ -159,32 +190,36 @@ public class EventServiceImpl implements EventService {
         List<Event> eventListBySearch =
                 eventRepository.findAll(booleanExpression, page).stream().toList();
 
-        statClient.saveHit(hitDto);
-
         List<Long> eventIds = eventListBySearch.stream().map(Event::getId).toList();
+
+        log.info("CALL. likeServiceClient.getAllEventsLikesByIds in getAllByPublic: eventIds = {}", eventIds);
         Map<Long, Long> likesEventMap = likeServiceClient.getAllEventsLikesByIds(eventIds);
+        log.info("likeServiceClient.getAllEventsLikesByIds in getAllByPublic finished: eventIds = {}", eventIds);
+        log.debug("result of likeServiceClient.getAllEventsLikesByIds in getAllByPublic {{}}", likesEventMap);
 
         Map<Long, UserDto> users = userServiceClient.getAll(eventListBySearch.stream()
                 .map(Event::getInitiatorId)
                 .toList());
 
-        List<Long> locationIds = eventListBySearch.stream().map(Event::getLocationId).toList();
-        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
 
+        List<Long> locationIds = eventListBySearch.stream().map(Event::getLocationId).toList();
+        log.info("call locationServiceClient.getAllById(locationIds) in getAllByPublic: locationIds = {}", locationIds);
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+        log.info("locationServiceClient.getAllById(locationIds) finished in getAllByPublic: locationIds = {}",
+                locationIds);
+        log.debug("result of locationServiceClient.getAllById(locationIds) in getAllByPublic{{}}",
+                locationDtoMap);
+
+        log.info("CALL. requestServiceClient.countByStatusAndEventsIds(\n" +
+                " RequestStatus.CONFIRMED, eventIds) in getAllByPublic: eventIds = {}", eventIds);
         Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
                 RequestStatus.CONFIRMED, eventIds);
+        log.info("FINISHED. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, eventIds)" +
+                        " in getAllByPublic: eventIds = {}", eventIds);
+        log.debug("RESULT. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, eventIds) " +
+                        "in getAllByPublic{{}}", countsOfConfirmedRequestsMap);
 
         for (Event event : eventListBySearch) {
-            List<HitStatDto> hitStatDtoList = statClient.getStats(
-                    rangeStart.format(dateTimeFormatter),
-                    rangeEnd.format(dateTimeFormatter),
-                    List.of("/event/" + event.getId()),
-                    false);
-            Long view = 0L;
-            for (HitStatDto hitStatDto : hitStatDtoList) {
-                view += hitStatDto.getHits();
-            }
-            event.setViews(view);
             event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
             event.setLikes(likesEventMap.get(event.getId()));
             event.setLocation(locationDtoMap.get(event.getLocationId()));
@@ -198,38 +233,45 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EventShortDto> getTopEvent(Integer count, HitDto hitDto) {
+    public List<EventShortDto> getTopEvent(Integer count) {
 
-        String rangeEnd = LocalDateTime.now().format(dateTimeFormatter);
-        String rangeStart = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
-
+        log.info("CALL. likeServiceClient.getTopLikedEventsIds(count) in getTopEvent: count = {}", count);
         Map<Long, Long> likesEventMap = likeServiceClient.getTopLikedEventsIds(count);
+        log.info("FINISHED. likeServiceClient.getTopLikedEventsIds(count) in getTopEvent: count = {}", count);
+        log.debug("RESULT. likeServiceClient.getTopLikedEventsIds(count) in getTopEvent: {{}}", likesEventMap);
         List<Long> topEventsIds = new ArrayList<>(likesEventMap.keySet());
         List<Event> eventTopList = eventRepository.findAllByIdIn(topEventsIds);
 
+        log.info("CALL. userServiceClient.getAll in getTopEvent: initiators in eventTopList = {}", eventTopList);
         Map<Long, UserDto> users = userServiceClient.getAll(eventTopList.stream()
                 .map(Event::getInitiatorId)
                 .toList());
+        log.info("FINISHED. userServiceClient.getAll in getTopEvent: initiators in eventTopList = {}",
+                eventTopList);
+        log.debug("RESULT. userServiceClient.getAll in getTopEvent: {{}}", users);
 
         List<Long> locationIds = eventTopList.stream().map(Event::getLocationId).toList();
-        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
 
+        log.info("CALL. locationServiceClient.getAllById(locationIds) in getTopEvent: locationIds = {}",
+                locationIds);
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+        log.info("FINISHED. locationServiceClient.getAllById(locationIds) in getTopEvent: locationIds = {}",
+                locationIds);
+        log.debug("RESULT. locationServiceClient.getAllById(locationIds) in getTopEvent: {{}}", locationDtoMap);
+
+
+        log.info("CALL. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, topEventsIds) " +
+                "in getTopEvent: eventIds = {}", topEventsIds);
         Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
                 RequestStatus.CONFIRMED, topEventsIds);
+        log.info("FINISHED. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, topEventsIds)" +
+                " in getTopEvent: eventIds = {}", topEventsIds);
+        log.debug("RESULT. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, topEventsIds) " +
+                "in getTopEvent: {{}}", countsOfConfirmedRequestsMap);
 
-        statClient.saveHit(hitDto);
 
         for (Event event : eventTopList) {
-            List<HitStatDto> hitStatDtoList = statClient.getStats(
-                    rangeStart,
-                    rangeEnd,
-                    List.of("/event/" + event.getId()),
-                    true);
-            Long view = 0L;
-            for (HitStatDto hitStatDto : hitStatDtoList) {
-                view += hitStatDto.getHits();
-            }
-            event.setViews(view);
+            event.setRating(getRatingFromAnalyzer(event.getId()));
             event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
             event.setLikes(likesEventMap.get(event.getId()));
             event.setLocation(locationDtoMap.get(event.getLocationId()));
@@ -241,54 +283,7 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<EventShortDto> getTopViewEvent(Integer count, HitDto hitDto) {
 
-        String rangeEnd = LocalDateTime.now().format(dateTimeFormatter);
-        String rangeStart = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
-
-        statClient.saveHit(hitDto);
-
-        List<HitStatDto> hitStatDtoList = statClient.getStats(
-                rangeStart,
-                rangeEnd,
-                null,
-                true);
-
-        Map<Long, Long> idsMap = hitStatDtoList.stream().filter(it -> it.getUri().matches("\\/events\\/\\d+$"))
-                        .collect((Collectors.groupingBy(dto ->
-                                Long.parseLong(dto.getUri().replace("/events/", "")),
-                                Collectors.summingLong(HitStatDto::getHits))));
-
-        Set<Long> ids = idsMap.keySet();
-        List<Event> eventListBySearch = eventRepository.findAllById(ids);
-        List<Event> result = new ArrayList<>();
-        idsMap.entrySet().stream()
-                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                .limit(count)
-                .forEach(it -> {
-                            Optional<Event> e = eventListBySearch.stream().filter(event ->
-                                    event.getId() == it.getKey()).findFirst();
-                            if (e.isPresent()) {
-                                Event eventRes = e.get();
-                                eventRes.setViews(it.getValue());
-                                result.add(eventRes);
-                            }
-                        }
-                );
-        Map<Long, UserDto> users = userServiceClient.getAll(result.stream()
-                .map(Event::getInitiatorId)
-                .toList());
-
-        for (Event event : result) {
-            event.setInitiator(users.get(event.getInitiatorId()));
-        }
-
-        return result.stream()
-                .map(eventMapper::eventToEventShortDto)
-                .toList();
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -330,17 +325,42 @@ public class EventServiceImpl implements EventService {
         List<Event> receivedEventList = eventRepository.findAll(booleanExpression, page).stream().toList();
 
         List<Long> eventIds = receivedEventList.stream().map(Event::getId).toList();
+
+        log.info("CALL. likeServiceClient.getAllEventsLikesByIds(eventIds) in getAllByAdmin: eventIds = {}", eventIds);
         Map<Long, Long> likesEventMap = likeServiceClient.getAllEventsLikesByIds(eventIds);
+        log.info("FINISHED. likeServiceClient.getAllEventsLikesByIds(eventIds) in getAllByAdmin: eventIds = {}", eventIds);
+        log.debug("RESULT. likeServiceClient.getAllEventsLikesByIds(eventIds) in getAllByAdmin: {{}}", likesEventMap);
 
         List<Long> locationIds = receivedEventList.stream().map(Event::getLocationId).toList();
-        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
 
+        log.info("CALL. locationServiceClient.getAllById(locationIds) in getAllByAdmin: locationIds = {}",
+                locationIds);
+        Map<Long, LocationDto> locationDtoMap = locationServiceClient.getAllById(locationIds);
+        log.info("FINISHED. locationServiceClient.getAllById(locationIds) in getAllByAdmin: locationIds = {}",
+                locationIds);
+        log.debug("RESULT. locationServiceClient.getAllById(locationIds) in getAllByAdmin: {{}}", locationDtoMap);
+
+
+
+        log.info("CALL. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, eventIds) " +
+                "in getAllByAdmin: eventIds = {}", eventIds);
         Map<Long, Long> countsOfConfirmedRequestsMap = requestServiceClient.countByStatusAndEventsIds(
                 RequestStatus.CONFIRMED, eventIds);
+        log.info("FINISHED. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, eventIds)" +
+                "in getAllByAdmin: eventIds = {}", eventIds);
+        log.debug("RESULT. requestServiceClient.countByStatusAndEventsIds(RequestStatus.CONFIRMED, eventIds " +
+                "in getAllByAdmin: {{}}", countsOfConfirmedRequestsMap);
 
+
+        log.info("CALL. userServiceClient.getAll by initiator in receivedEventList " +
+                "in getAllByAdmin: receivedEventList = {}", receivedEventList);
         Map<Long, UserDto> users = userServiceClient.getAll(receivedEventList.stream()
                 .map(Event::getInitiatorId)
                 .toList());
+        log.info("FINISHED. userServiceClient.getAll by initiator in receivedEventList " +
+                "in getAllByAdmin: receivedEventList = {}", receivedEventList);
+        log.debug("RESULT. userServiceClient.getAll : {{}}", users);
+
 
         for (Event event : receivedEventList) {
             event.setConfirmedRequests(countsOfConfirmedRequestsMap.get(event.getId()));
@@ -359,10 +379,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getById(EventGetByIdParams params, HitDto hitDto) {
+    public EventFullDto getById(EventGetByIdParams params) {
         Event receivedEvent;
         if (params.initiatorId() != null) {
+            log.info("CALL. userServiceClient.checkExistence(params.initiatorId() " +
+                    "in getById: params.initiatorId() = {}", params.initiatorId());
             userServiceClient.checkExistence(params.initiatorId());
+            log.info("FINISHED. userServiceClient.checkExistence(params.initiatorId() " +
+                    "in getById: params.initiatorId() = {}", params.initiatorId());
             receivedEvent = eventRepository.findByInitiatorIdAndId(params.initiatorId(), params.eventId())
                     .orElseThrow(() -> new NotFoundException(
                             "Event with id " + params.eventId() +
@@ -370,24 +394,43 @@ public class EventServiceImpl implements EventService {
         } else {
             receivedEvent = eventRepository.findById(params.eventId())
                     .orElseThrow(() -> new NotFoundException("Event with id " + params.eventId() + " not found"));
-            statClient.saveHit(hitDto);
 
-            List<HitStatDto> hitStatDtoList = statClient.getStats(
-                        "", "", List.of("/events/" + params.eventId()), true
-            );
-            Long view = 0L;
-            for (HitStatDto hitStatDto : hitStatDtoList) {
-                view += hitStatDto.getHits();
-            }
+            double rating = getRatingFromAnalyzer(params.eventId());
 
-            receivedEvent.setViews(view);
+            receivedEvent.setRating(rating);
+            log.info("CALL. requestServiceClient.countByStatusAndEventsIds(" +
+                    " RequestStatus.CONFIRMED, receivedEvent.getId())" +
+                    " in getById: eventIds = {}", receivedEvent.getId());
             receivedEvent.setConfirmedRequests(
                     requestServiceClient.countByStatusAndEventId(RequestStatus.CONFIRMED, receivedEvent.getId()));
+            log.info("FINISHED. requestServiceClient.countByStatusAndEventsIds(" +
+                    " RequestStatus.CONFIRMED, receivedEvent.getId())" +
+                    " in getById: eventIds = {}", receivedEvent.getId());
+
+            log.info("CALL. likeServiceClient.getCountByEventId(receivedEvent.getId()) " +
+                    " in getById: receivedEvent.getId() = {}", receivedEvent.getId());
             receivedEvent.setLikes(likeServiceClient.getCountByEventId(receivedEvent.getId()));
+            log.info("FINISHED. likeServiceClient.getCountByEventId(receivedEvent.getId()) " +
+                    " in getById: receivedEvent.getId() = {}", receivedEvent.getId());
+
+            log.info("CALL. locationServiceClient.getById(receivedEvent.getLocationId()) " +
+                    " in getById: receivedEvent.getLocationId() = {}", receivedEvent.getLocationId());
             receivedEvent.setLocation(locationServiceClient.getById(receivedEvent.getLocationId()));
+            log.info("FINISHED. locationServiceClient.getById(receivedEvent.getLocationId()) " +
+                    " in getById: receivedEvent.getLocationId() = {}", receivedEvent.getLocationId());
         }
+
+        log.info("CALL. userServiceClient.getById(receivedEvent.getInitiatorId()) in getById:" +
+                        " receivedEvent.getInitiatorId(): {}",
+                receivedEvent.getInitiatorId());
         UserDto initiator = userServiceClient.getById(receivedEvent.getInitiatorId());
+        log.info("FINISHED. userServiceClient.getById(receivedEvent.getInitiatorId()) in getById: " +
+                        "receivedEvent.getInitiatorId(): {}",
+                receivedEvent.getInitiatorId());
+        log.info("RESULT. userServiceClient.getById(receivedEvent.getInitiatorId()) in getById: {}",
+                initiator);
         receivedEvent.setInitiator(initiator);
+
         return eventMapper.eventToEventFullDto(receivedEvent);
     }
 
@@ -471,14 +514,41 @@ public class EventServiceImpl implements EventService {
 
         updatedEvent = eventRepository.save(event);
 
+        log.info("CALL. likeServiceClient.getCountByEventId(updatedEvent.getId()) " +
+                " in update: receivedEvent.getId() = {}", updatedEvent.getId());
         updatedEvent.setLikes(likeServiceClient.getCountByEventId(updatedEvent.getId()));
+        log.info("FINISHED. likeServiceClient.getCountByEventId(updatedEvent.getId()) " +
+                " in update: receivedEvent.getId() = {}", updatedEvent.getId());
+        log.debug("RESULT. likeServiceClient.getCountByEventId(updatedEvent.getId()) " +
+                " in update: {{}}", updatedEvent.getLikes());
 
+        log.info("CALL. locationServiceClient.getById(updatedEvent.getLocationId()) " +
+                " in update: updatedEvent.getLocationId() = {}", updatedEvent.getLocationId());
         updatedEvent.setLocation(locationServiceClient.getById(updatedEvent.getLocationId()));
+        log.info("FINISHED. locationServiceClient.getById(updatedEvent.getLocationId()) " +
+                " in update: updatedEvent.getLocationId() = {}", updatedEvent.getLocationId());
+        log.debug("RESULT. locationServiceClient.getById(updatedEvent.getLocationId()) " +
+                " in update: {{}}", updatedEvent.getLocation());
 
+        log.info("CALL. requestServiceClient.countByStatusAndEventId(" +
+                " RequestStatus.CONFIRMED, updatedEvent.getId()) " +
+                " in update: updatedEvent.getId() = {}", updatedEvent.getId());
         updatedEvent.setConfirmedRequests(requestServiceClient.countByStatusAndEventId(
                 RequestStatus.CONFIRMED, updatedEvent.getId()));
+        log.info("FINISHED. requestServiceClient.countByStatusAndEventId(" +
+                " RequestStatus.CONFIRMED, updatedEvent.getId()) " +
+                " in update: updatedEvent.getId() = {}", updatedEvent.getId());
+        log.debug("RESULT. requestServiceClient.countByStatusAndEventId(" +
+                " RequestStatus.CONFIRMED, updatedEvent.getId()) " +
+                " in update: {{}}", updatedEvent.getConfirmedRequests());
 
+        log.info("CALL. userServiceClient.getById(updatedEvent.getInitiatorId())" +
+                " in update: updatedEvent.getInitiatorId() = {}", updatedEvent.getInitiatorId());
         updatedEvent.setInitiator(userServiceClient.getById(updatedEvent.getInitiatorId()));
+        log.info("FINISHED. userServiceClient.getById(updatedEvent.getInitiatorId())" +
+                " in update: updatedEvent.getInitiatorId() = {}", updatedEvent.getInitiatorId());
+        log.debug("RESULT. userServiceClient.getById(updatedEvent.getInitiatorId())" +
+                " in update: {{}}", updatedEvent.getInitiator());
 
         log.debug("Событие возвращенное из базы: {} ; {}", event.getId(), event.getState());
 
@@ -489,8 +559,27 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getByIdInternal(long eventId) {
         Event savedEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id " + eventId + " not found"));
+        log.info("CALL. userServiceClient.getById(savedEvent.getInitiatorId())" +
+                " in update: savedEvent.getInitiatorId() = {}", savedEvent.getInitiatorId());
         savedEvent.setInitiator(userServiceClient.getById(savedEvent.getInitiatorId()));
+        log.info("FINISHED. userServiceClient.getById(savedEvent.getInitiatorId())" +
+                " in update: savedEvent.getInitiatorId() = {}", savedEvent.getInitiatorId());
+        log.info("RESULT. userServiceClient.getById(savedEvent.getInitiatorId())" +
+                " in update: {{}}", savedEvent.getInitiator());
         return eventMapper.eventToEventFullDto(savedEvent);
+    }
+
+    private double getRatingFromAnalyzer(long eventId) {
+
+        log.info("CALL. analyzerClient.getInteractionsCount(List.of(eventId)). eventId: {}", eventId);
+        Stream<RecommendationMessages.RecommendedEventProto> interactionsCountStream =
+                analyzerClient.getInteractionsCount(List.of(eventId));
+        log.info("FINISHED. analyzerClient.getInteractionsCount(List.of(eventId)). eventId: {}", eventId);
+        double result = interactionsCountStream.findFirst()
+                .map(RecommendationMessages.RecommendedEventProto::getScore)
+                .orElse(0.0);
+        log.debug("RESULT. getRatingFromAnalyzer. Counted result: {}", result);
+        return result;
     }
 
 }

@@ -25,4 +25,6 @@ public interface RequestService {
 
     Map<Long, Long> countByStatusAndEventsIds(RequestStatus status, List<Long> eventsIds);
 
+    boolean existsByEventIdAndRequesterIdAndStatus(long eventId, long requesterId, RequestStatus status);
+
 }

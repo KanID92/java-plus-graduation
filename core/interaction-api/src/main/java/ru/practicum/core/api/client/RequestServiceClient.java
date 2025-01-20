@@ -19,4 +19,7 @@ public interface RequestServiceClient {
     Map<Long, Long> countByStatusAndEventsIds(
             @RequestParam RequestStatus status, @RequestParam List<Long> eventsIds);
 
+    @GetMapping("/internal/requests/{eventId}/{userId}/status")
+    boolean isUserHasConfirmedRequest(@PathVariable long eventId, @PathVariable long userId);
+
 }

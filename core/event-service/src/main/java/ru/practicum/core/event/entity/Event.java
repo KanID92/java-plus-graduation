@@ -73,7 +73,7 @@ public class Event {
     private String title;
 
     @Transient
-    Long views;
+    Double rating;
 
     @Transient
     Long likes;

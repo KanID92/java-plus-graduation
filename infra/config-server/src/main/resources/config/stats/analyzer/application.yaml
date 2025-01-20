@@ -1,0 +1,51 @@
+analyzer:
+  kafka:
+    user-actions-properties:
+      "bootstrap.servers": kafka:29092
+      "group.id": analyzer-user-actions-group
+      "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
+      "value.deserializer": kafka.serializer.UserActionDeserializer
+    event-similarity-properties:
+      "bootstrap.servers": kafka:29092
+      "group.id": analyzer-event-similarity-group
+      "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
+      "value.deserializer": kafka.serializer.EventSimilarityDeserializer
+    topics:
+      user-actions: stats.user-actions.v1
+      event-similarity: stats.events-similarity.v1
+
+
+grpc:
+  server:
+    port: 0
+  client:
+    analyzer:
+      address: 'discovery:///analyzer'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://stats-analyzer-db:5432/ewm-stats-analyzer-db
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    org:
+      zalando:
+        logbook: TRACE

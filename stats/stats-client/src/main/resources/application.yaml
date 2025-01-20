@@ -1,0 +1,12 @@
+grpc:
+  client:
+    analyzer:
+      address: 'discovery://collector'
+      enable-keep-alive: true
+      keep-alive-without-calls: true
+      negotiation-type: plaintext
+    collector:
+      address: 'discovery://analyzer'
+      enable-keep-alive: false
+      keep-alive-without-calls: false
+      negotiation-type: plaintext

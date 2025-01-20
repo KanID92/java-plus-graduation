@@ -1,7 +1,6 @@
 package ru.practicum.core.event.controller.publ;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.core.api.dto.compilation.CompilationDto;
@@ -9,7 +8,6 @@ import ru.practicum.core.event.service.CompilationService;
 
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping(path = "/compilations")
 @RequiredArgsConstructor

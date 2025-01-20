@@ -1,7 +1,6 @@
 package ru.practicum.core.user.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.core.api.dto.user.UserDto;
 import ru.practicum.core.user.service.UserService;
@@ -9,7 +8,6 @@ import ru.practicum.core.user.service.UserService;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @RestController
 @RequestMapping("/internal/users")
 @RequiredArgsConstructor
@@ -19,25 +17,17 @@ public class InternalUserController {
 
     @GetMapping("/{userId}")
     public UserDto getById(@PathVariable long userId) {
-        log.info("|| ==> GET Getting user by id: {}", userId);
-        UserDto userDto = userService.getById(userId);
-        log.info("|| <== GET Returning user: {}", userDto);
-        return userDto;
+        return userService.getById(userId);
     }
 
     @GetMapping("/{userId}/check")
     public void checkExistence(@PathVariable("userId") long userId) {
-        log.info("==> GET. Checking exist for User: {}", userId);
         userService.checkExistence(userId);
-        log.info("|==| GET. User exist: {}", true);
     }
 
     @GetMapping("/all")
     public Map<Long, UserDto> getAll(@RequestParam List<Long> userIds) {
-        log.info("==> GET. Getting users by ids: {}", userIds);
-        Map<Long, UserDto> users = userService.getByIds(userIds);
-        log.info("<== GET. Returning users by ids: {}", userIds);
-        return users;
+        return userService.getByIds(userIds);
     }
 
 }

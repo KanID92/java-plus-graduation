@@ -18,7 +18,7 @@ spring:
         - id: like_service_internal_route
           uri: lb://like-service
           predicates:
-            - Path=//internal/likes/**
+            - Path=/internal/likes/**
 
         - id: like_service_private_location_route
           uri: lb://like-service
@@ -59,6 +59,7 @@ spring:
           uri: lb://event-service
           predicates:
             - Path=/users/{userId}/events/{eventId}
+
         - id: event_service_event_public_route
           uri: lb://event-service
           predicates:
@@ -105,6 +106,9 @@ server:
 logging:
   level:
     org:
+      zalando:
+        logbook: TRACE
       springframework:
         cloud:
-          gateway: DEBUG
+          gateway: INFO
+
